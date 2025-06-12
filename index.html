@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>جستجوی دارو</title>
+    <!-- Persian Font: Vazirmatn from cdn.jsdelivr.net -->
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+     <!-- Font Awesome for Icons (for Copy button) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+
+    <!-- Link to your external CSS file -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <section id="subscribe" class="subscribe">
+            <div class="containerSearch" style="float: none; padding-top:0px; margin:0 auto;">
+                <div class="subscribe-inputs1">
+                    <div> داروی مورد نظر را جستجو نمایید</div>
+                    <form action="#" method="post">
+                        <div class="input-with-clear" id="searchInputElementContainer">
+                            <input id="Term" name="Term" type="text" value="" placeholder="نام دارو..." />
+                            <span class="clear-input" id="clearSearchInput" role="button" tabindex="0" aria-label="پاک کردن جستجو">×</span>
+                        </div>
+                        <input value="جستجو" type="submit">
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <div id="searchHistory" class="search-history" style="display: none;">
+             <h4>جستجوهای اخیر</h4>
+             <ul id="searchHistoryList"></ul>
+        </div>
+
+        <div id="simulationResult" aria-live="polite">
+            <p id="initialMessage" style="text-align: center;">داروی مورد نظر خود را جستجو کنید.</p>
+        </div>
+    </div>
+
+    <div id="modalOverlay" class="modal-overlay"></div>
+
+    <div id="imageModal" class="app-modal" role="dialog" aria-modal="true" aria-labelledby="modalCaption">
+        <img id="zoomedImage" class="zoomed-image" src="" alt="Zoomed Image">
+        <div id="modalLoadingSpinner" class="spinner" role="status"><span class="sr-only">در حال بارگذاری...</span></div>
+        <button id="prevImageButton" class="modal-nav-button prev-image-button" aria-label="تصویر قبلی">‹</button>
+        <button id="nextImageButton" class="modal-nav-button next-image-button" aria-label="تصویر بعدی">›</button>
+        <div id="modalCaption" class="modal-caption" aria-live="polite"></div>
+        <div id="modalMiniMap"></div>
+    </div>
+
+     <span id="closeImageModalButton" class="modal-close" role="button" tabindex="0" aria-label="بستن پنجره">×</span>
+
+
+    <!-- Link to your external JS file, ensure it's type="module" for ES6 modules -->
+    <script src="script.js" type="module"></script>
+</body>
+</html>
