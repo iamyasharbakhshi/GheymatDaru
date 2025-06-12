@@ -29,7 +29,7 @@ const ImageModal = {
         this.miniMapContainer = document.getElementById('modalMiniMap');
 
         if (this.imageOverlay) this.imageOverlay.addEventListener('click', this.hide.bind(this));
-        if (this.imageModal) this.imageModal.addEventListener('click', this.hide.bind(this)); // Click on modal background (not content) closes
+        if (this.imageModal) this.imageModal.addEventListener('click', this.hide.bind(this)); 
         if (this.closeButton) {
             this.closeButton.addEventListener('click', this.hide.bind(this));
             this.closeButton.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') this.hide.bind(this)(e); });
@@ -37,7 +37,6 @@ const ImageModal = {
         if (this.prevButton) this.prevButton.addEventListener('click', function(e){ e.stopPropagation(); this.showPrev(); }.bind(this));
         if (this.nextButton) this.nextButton.addEventListener('click', function(e){ e.stopPropagation(); this.showNext(); }.bind(this));
 
-        // Prevent modal close when clicking on these specific elements inside the modal
         if (this.zoomedImage) this.zoomedImage.addEventListener('click', function(e){ e.stopPropagation(); });
         if (this.spinner) this.spinner.addEventListener('click', function(e){ e.stopPropagation(); });
         if (this.caption) this.caption.addEventListener('click', function(e){ e.stopPropagation(); });
@@ -57,7 +56,7 @@ const ImageModal = {
      handleMiniMapClick: function(event) {
          const clickedThumbnail = event.target.closest('img');
           if (clickedThumbnail) {
-              event.stopPropagation(); // Prevent modal close from mini-map click
+              event.stopPropagation(); 
               const index = parseInt(clickedThumbnail.getAttribute('data-index'));
                if (!isNaN(index) && index !== this.currentImageIndex) {
                    this.jumpToImage(index);
@@ -76,7 +75,7 @@ const ImageModal = {
             if (this.xDown !== null && this.yDown !== null) {
                 const xDiff = this.xDown - evt.touches[0].clientX;
                 const yDiff = this.yDown - evt.touches[0].clientY;
-                if (Math.abs(xDiff) > Math.abs(yDiff)) { // Horizontal swipe
+                if (Math.abs(xDiff) > Math.abs(yDiff)) { 
                     evt.preventDefault();
                 }
             }
@@ -173,8 +172,8 @@ const ImageModal = {
         if (!this.zoomedImage || !this.spinner || !this.caption || !this.prevButton || !this.nextButton || !this.miniMapContainer) return;
 
         this.spinner.style.display = 'block';
-        this.zoomedImage.style.display = 'none'; // Hide while loading new image
-        this.zoomedImage.style.opacity = 0;      // For fade-in effect
+        this.zoomedImage.style.display = 'none'; 
+        this.zoomedImage.style.opacity = 0;      
         this.caption.style.opacity = 0;
         this.prevButton.style.opacity = 0;
         this.nextButton.style.opacity = 0;
@@ -188,10 +187,9 @@ const ImageModal = {
             const tempImg = new Image();
             tempImg.onload = () => {
                  this.spinner.style.display = 'none';
-                 this.zoomedImage.src = tempImg.src; // Set src before making visible for transition
+                 this.zoomedImage.src = tempImg.src; 
                  this.zoomedImage.style.display = 'block';
                  this.updateMiniMapActiveState();
-                 // Slight delay to allow display:block to take effect before opacity transition
                  setTimeout(() => {
                      this.zoomedImage.style.opacity = 1;
                      this.caption.textContent = `${this.currentDrugTitle ? escapeHtml(this.currentDrugTitle) + ' - ' : ''}${this.currentImageIndex + 1} از ${this.currentGalleryImages.length}`;
@@ -208,7 +206,7 @@ const ImageModal = {
                            this.miniMapContainer.style.display = 'block';
                           setTimeout(() => { this.miniMapContainer.style.opacity = 1; }, 50);
                       }
-                 }, 20); // Small delay for opacity transition
+                 }, 20); 
             };
             tempImg.onerror = () => {
                  this.spinner.style.display = 'none';
@@ -241,6 +239,8 @@ const ImageModal = {
                    thumbImg.alt = `نمای کوچک ${index + 1} از ${escapeHtml(this.currentDrugTitle)}`;
                    thumbImg.setAttribute('data-index', index);
                    thumbImg.loading = 'lazy';
+                   // For better keyboard accessibility, wrap in button or add tabindex/role
+                   // For now, relying on click handler and visual focus from CSS
                    this.miniMapContainer.appendChild(thumbImg);
               });
          } else {
@@ -295,7 +295,7 @@ const SearchApp = {
         this.searchHistoryDiv = document.getElementById('searchHistory');
         this.searchHistoryListUl = document.getElementById('searchHistoryList');
 
-        this.loadUserPreferences(); // Load preferences before other UI setups
+        this.loadUserPreferences(); 
 
         ImageModal.init();
         this.attachEventListeners();
@@ -337,7 +337,6 @@ const SearchApp = {
         if (savedSortDir) {
             this.currentSortDirection = savedSortDir;
         }
-        // Assuming currentFilterKey is always 'owner' for now
         if (savedFilterVal) {
             this.currentFilterValue = savedFilterVal;
         }
@@ -363,8 +362,7 @@ const SearchApp = {
              if (this.termInput) this.termInput.value = poppedTerm;
              this.handleInputDirection();
              this.handleClearButtonVisibility();
-             // When navigating history, re-apply saved preferences or defaults
-             this.loadUserPreferences(); // Could also reset to default if preferred for back/fwd
+             this.loadUserPreferences(); 
              if (poppedTerm) {
                 this.performSearch(poppedTerm, poppedPage);
              } else {
@@ -406,7 +404,6 @@ const SearchApp = {
          this.resultDiv.innerHTML = '';
          this.showInitialMessages();
          history.pushState({}, '', window.location.pathname);
-         // Reset sort/filter to defaults when search is cleared
          this.currentSortKey = 'none'; this.currentSortDirection = 'asc';
          this.currentFilterKey = 'owner'; this.currentFilterValue = 'all';
          localStorage.removeItem(this.LOCAL_STORAGE_SORT_KEY);
@@ -439,14 +436,11 @@ const SearchApp = {
              }
             return;
         }
-         // Decide if sort/filter should reset for a *new search term*
-         // Option 1: Reset (current behavior, good for fresh searches)
          this.currentSortKey = 'none'; this.currentSortDirection = 'asc';
          this.currentFilterKey = 'owner'; this.currentFilterValue = 'all';
          localStorage.removeItem(this.LOCAL_STORAGE_SORT_KEY);
          localStorage.removeItem(this.LOCAL_STORAGE_SORT_DIR_KEY);
          localStorage.removeItem(this.LOCAL_STORAGE_FILTER_VAL_KEY);
-         // Option 2: Keep preferences - comment out the lines above
 
          this.performSearch(searchTerm);
          this.saveSearchTermToHistory(searchTerm);
@@ -538,8 +532,6 @@ const SearchApp = {
                  this.termInput.value = searchTerm;
                  this.handleInputDirection();
                  this.handleClearButtonVisibility();
-                 // When clicking history, reset sort/filter to defaults or load saved ones for that term (more complex)
-                 // For now, reset to default for simplicity on history click
                  this.currentSortKey = 'none'; this.currentSortDirection = 'asc';
                  this.currentFilterKey = 'owner'; this.currentFilterValue = 'all';
                  localStorage.removeItem(this.LOCAL_STORAGE_SORT_KEY);
@@ -647,12 +639,12 @@ const SearchApp = {
 
              if (tempImageUrls.length > 1) {
                  finalImageUrls = tempImageUrls.slice(0, -1);
-                 if (tempThumbnailUrls.length === tempImageUrls.length) {
+                 if (tempThumbnailUrls.length === tempImageUrls.length) { 
                      finalThumbnailUrls = tempThumbnailUrls.slice(0, -1);
-                 } else if (tempThumbnailUrls.length > 1) { 
+                 } else if (tempThumbnailUrls.length > 1) {  
                      finalThumbnailUrls = tempThumbnailUrls.slice(0, -1);
                      console.warn("Thumbnail/image URL array lengths mismatched. Sliced thumbnails independently.");
-                 } else { 
+                 } else {  
                      finalThumbnailUrls = finalImageUrls; 
                      console.warn("Thumbnail/image URL array lengths mismatched significantly or not enough thumbnails. Using (sliced) full image URLs for thumbnails.");
                  }
@@ -851,7 +843,6 @@ const SearchApp = {
          this.sortSelect = this.resultDiv.querySelector('#sortSelect');
          this.statusIndicator = this.resultDiv.querySelector('#currentStatusIndicator');
         
-        // Apply loaded preferences to select elements
         if(this.ownerFilterSelect) this.ownerFilterSelect.value = this.currentFilterValue;
         if(this.sortSelect) {
             const sortValue = this.currentSortKey === 'none' ? 'none' : `${this.currentSortKey}-${this.currentSortDirection}`;
@@ -862,7 +853,6 @@ const SearchApp = {
         const resultsListUl = this.resultDiv.querySelector('#resultsList');
         if(resultsListUl) {
             this.allResultsOnCurrentPage = Array.from(resultsListUl.querySelectorAll('li.result-item'));
-            // Apply current filters and sorts from potentially loaded preferences
             this.filterResults(this.currentFilterKey, this.currentFilterValue);
             if (this.currentSortKey !== 'none') {
                 this.sortResults(this.currentSortKey, this.currentSortDirection);
@@ -1015,6 +1005,27 @@ const SearchApp = {
     }
 };
 
+// Back to Top Button Functionality
+const backToTopButton = document.getElementById("backToTopBtn");
+
+if (backToTopButton) {
+    window.onscroll = function() {scrollFunction()};
+
+    function scrollFunction() {
+        if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
+            if (backToTopButton) backToTopButton.style.display = "flex"; 
+        } else {
+            if (backToTopButton) backToTopButton.style.display = "none";
+        }
+    }
+
+    backToTopButton.addEventListener('click', function() {
+        document.body.scrollTop = 0; 
+        document.documentElement.scrollTop = 0; 
+    });
+}
+
+
 function getQueryParams(url) {
     const params = {};
     if (!url) return params;
@@ -1059,5 +1070,11 @@ function getIconicPaginationText(originalText) {
      }
  }
 document.addEventListener('DOMContentLoaded', function() {
+     // Ensure backToTopButton is defined here if the script runs before its HTML element exists
+     // However, since it's outside SearchApp.init, it's better to ensure its element is in HTML first
+     // Or, move the backToTopButton related DOM query and event listener attachment inside DOMContentLoaded
+     // For simplicity, current structure assumes #backToTopBtn exists in HTML when this script part runs.
+     // No, the const backToTopButton is declared globally so it's fine.
+
      setTimeout(() => { SearchApp.init(); }, 50);
 });

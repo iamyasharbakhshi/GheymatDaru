@@ -133,6 +133,7 @@ body.modal-open {
      z-index: 2;
      padding: 0 5px;
      line-height: 1;
+     border-radius: 50%; /* For focus outline */
  }
  .input-with-clear[dir="rtl"] .clear-input {
      left: auto;
@@ -153,6 +154,11 @@ body.modal-open {
  .input-with-clear .clear-input:hover {
      color: #666;
  }
+ .input-with-clear .clear-input:focus {
+    outline: none;
+    color: #333; 
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+ }
 
 
 .subscribe-inputs1 input[type="submit"] {
@@ -167,7 +173,10 @@ body.modal-open {
     transition: background-color 0.3s ease, transform 0.1s ease;
     flex-shrink: 0;
 }
-
+.subscribe-inputs1 input[type="submit"]:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5);
+}
 .subscribe-inputs1 input[type="submit"]:hover {
     background-color: #0056b3;
 }
@@ -234,7 +243,14 @@ body.modal-open {
     margin-bottom: 15px;
     order: 1;
     cursor: zoom-in;
+    border-radius: 6px; /* For focus outline */
 }
+.drug-card .card-image:focus-within, /* if image itself can't take focus reliably */
+.drug-card .card-image:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
+}
+
  .drug-card .card-image img {
     display: block;
     max-width: 100%;
@@ -364,8 +380,14 @@ body.modal-open {
       vertical-align: middle;
       position: relative;
       opacity: 1;
+      border-radius: 3px; /* For focus outline */
   }
   .detail-row .copy-button:hover { color: #0056b3; }
+  .detail-row .copy-button:focus {
+      outline: none;
+      color: #0056b3;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+  }
   .detail-row .copy-button.icon-copied {
       color: #28a745;
       transform: scale(1.2);
@@ -403,7 +425,7 @@ body.modal-open {
     text-decoration: none;
     border-radius: 6px;
     font-size: 1rem;
-    transition: background-color 0.2s ease-in-out, color 0.2s ease;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease, box-shadow 0.2s ease;
     font-weight: 500;
     font-family: Vazirmatn, sans-serif;
     cursor: pointer;
@@ -411,6 +433,12 @@ body.modal-open {
 .drug-card .detail-link:hover {
     background-color: #dee2e6;
     color: #0056b3;
+}
+.drug-card .detail-link:focus {
+    outline: none;
+    background-color: #d4dae0;
+    color: #0056b3;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
 }
 
  .expand-details-button {
@@ -426,14 +454,20 @@ body.modal-open {
      padding: 5px;
      transition: color 0.2s ease;
      font-family: Vazirmatn, sans-serif;
+     border-radius: 4px; 
  }
   .expand-details-button:hover { color: #0056b3; }
+  .expand-details-button:focus {
+    outline: none;
+    color: #0056b3;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+  }
   .expand-details-button::after {
-      content: 'نمایش بیشتر \25BC'; /* Down arrow */
+      content: 'نمایش بیشتر \25BC'; 
       margin-right: 5px;
   }
   .expand-details-button.expanded::after {
-      content: 'نمایش کمتر \25B2'; /* Up arrow */
+      content: 'نمایش کمتر \25B2'; 
       margin-right: 5px;
   }
      .drug-card .other-details:not(.is-collapsible) + .expand-details-button {
@@ -464,7 +498,7 @@ body.modal-open {
     border: 1px solid #dee2e6;
     color: #007bff;
     text-decoration: none;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
     min-width: 40px;
     font-size: 1.1rem;
     font-weight: 600;
@@ -472,6 +506,7 @@ body.modal-open {
     font-family: Arial, Helvetica, sans-serif;
     cursor: pointer;
     background-color: #fff;
+    position: relative; /* For z-index on focus */
 }
 .pagination li:first-child a {
     border-top-right-radius: 6px;
@@ -487,11 +522,19 @@ body.modal-open {
     background-color: #e9ecef;
     border-color: #ced4da;
 }
+.pagination li a:focus { 
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+    z-index: 2; 
+}
 .pagination li.active a {
     background-color: #007bff;
     border-color: #007bff;
     color: white;
     pointer-events: none;
+}
+.pagination li.active a:focus { /* Ensure active link focus doesn't add a different shadow */
+    box-shadow: none;
 }
 .pagination li.disabled a {
     color: #6c757d;
@@ -499,6 +542,10 @@ body.modal-open {
     background-color: #f8f9fa;
      border-color: #dee2e6;
 }
+.pagination li.disabled a:focus {
+    box-shadow: none; /* No focus indication for disabled items */
+}
+
 
 /* No Results / Suggestions Styling */
 .no-results-container {
@@ -528,14 +575,21 @@ body.modal-open {
       color: #007bff;
       text-decoration: none;
       font-size: 1.05rem;
-      transition: color 0.2s ease, text-decoration 0.2s ease;
+      transition: color 0.2s ease, text-decoration 0.2s ease, box-shadow 0.2s ease;
       font-weight: 500;
       padding: 3px 0;
       display: inline-block;
+      border-radius: 3px; /* For focus outline */
   }
    .no-results-container .suggestions-list li a:hover {
        text-decoration: underline;
        color: #0056b3;
+   }
+   .no-results-container .suggestions-list li a:focus {
+       outline: none;
+       text-decoration: underline;
+       color: #0056b3;
+       box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
    }
 
 /* --- Modal (Lightbox) Styling --- */
@@ -588,7 +642,7 @@ body.modal-open {
 .zoomed-image {
     display: block;
     max-width: 100%;
-    max-height: calc(100vh - 80px); /* Default for larger screens */
+    max-height: calc(100vh - 80px); 
     height: auto;
     margin: auto;
     object-fit: contain;
@@ -599,7 +653,7 @@ body.modal-open {
     padding: 0;
     background: none;
     display: none;
-    transition: opacity 0.2s ease-in-out; /* For smooth image swap */
+    transition: opacity 0.2s ease-in-out; 
 }
 .modal-close {
     position: fixed;
@@ -615,11 +669,19 @@ body.modal-open {
     display: none;
     pointer-events: auto;
     line-height: 1;
+    border-radius: 50%; /* For focus styling */
 }
 .modal-close:hover {
     color: #ccc;
     transform: scale(1.1);
 }
+.modal-close:focus {
+    outline: none;
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+    transform: scale(1.1);
+}
+
 .modal-nav-button {
     position: fixed;
     top: 50%;
@@ -647,6 +709,12 @@ body.modal-open {
     background-color: rgba(255, 255, 255, 0.4);
     transform: translateY(-50%) scale(1.05);
 }
+.modal-nav-button:focus {
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+    transform: translateY(-50%) scale(1.05);
+}
 .prev-image-button { left: 10px; }
  .next-image-button { right: 10px; }
 
@@ -671,7 +739,7 @@ body.modal-open {
 }
  #modalMiniMap {
      position: fixed;
-     bottom: 45px; /* Default, adjusted by media queries */
+     bottom: 45px; 
      left: 0;
      right: 0;
      z-index: 1055;
@@ -695,20 +763,28 @@ body.modal-open {
        background: rgba(0,0,0,0.3);
    }
  #modalMiniMap img {
-     width: 45px; /* Default, adjusted by media queries */
+     width: 45px; 
      height: 45px;
      object-fit: cover;
      border: 2px solid transparent;
-     margin: 0 5px; /* Default, adjusted by media queries */
+     margin: 0 5px; 
      cursor: pointer;
      transition: border-color 0.2s ease, transform 0.1s ease;
      border-radius: 4px;
      background-color: white;
      padding: 2px;
  }
+ #modalMiniMap img:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 1px;
+    border-color: #007bff; 
+ }
  #modalMiniMap img.active {
      border-color: #007bff;
      transform: scale(1.1);
+ }
+  #modalMiniMap img.active:focus {
+    outline-color: #0056b3; 
  }
   #modalMiniMap img:hover:not(.active) {
       border-color: rgba(0, 123, 255, 0.5);
@@ -810,7 +886,6 @@ body.modal-open {
      flex-wrap: wrap;
      gap: 8px;
  }
- /* .search-history li {} */
  .search-history li a {
      background-color: #e9ecef;
      padding: 6px 12px;
@@ -818,12 +893,18 @@ body.modal-open {
      text-decoration: none;
      color: #007bff;
      font-size: 0.9em;
-     transition: background-color 0.2s ease, color 0.2s ease;
+     transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
      display: inline-block;
  }
  .search-history li a:hover {
      background-color: #007bff;
      color: #fff;
+ }
+ .search-history li a:focus { 
+    outline: none;
+    background-color: #0056b3; 
+    color: #fff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
  }
 
 /* Status Indicator Styling */
@@ -839,11 +920,47 @@ body.modal-open {
      border-radius: 4px;
  }
 
+/* Back to Top Button */
+#backToTopBtn {
+    display: none; 
+    position: fixed;
+    bottom: 20px;
+    left: 20px; 
+    z-index: 1000;
+    border: none;
+    outline: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    padding: 0; 
+    border-radius: 50%; 
+    width: 45px;
+    height: 45px;
+    font-size: 1.2rem; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease, opacity 0.3s ease, transform 0.2s ease;
+    opacity: 0.8;
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+}
+
+#backToTopBtn:hover {
+    background-color: #0056b3;
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+#backToTopBtn:focus { 
+    outline: 2px solid #0056b3;
+    outline-offset: 2px;
+    opacity: 1;
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 992px) {
      .drug-card .card-image { width: 160px; }
-     /* Modal specific adjustments */
      .zoomed-image { max-height: calc(100vh - 100px); }
      .modal-caption { font-size: 1rem; bottom: 15px; }
      #modalMiniMap { bottom: 60px; }
@@ -910,7 +1027,6 @@ body.modal-open {
      .no-results-container { padding: 20px; }
      .no-results-container h3 { font-size: 1.3rem; }
 
-    /* Modal specific adjustments for mobile */
      .zoomed-image { max-height: calc(100vh - 60px); }
      .modal-close {
          top: 10px; right: 10px; font-size: 30px;
@@ -951,7 +1067,6 @@ body.modal-open {
        }
         .filter-controls label { margin-left: 0; margin-bottom: 5px; }
 
-    /* Modal specific adjustments for very small screens */
     .zoomed-image { max-height: calc(100vh - 50px); }
     .modal-nav-button {
          padding: 8px; font-size: 1.6rem; width: 40px; height: 40px;
