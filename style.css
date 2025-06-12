@@ -1,28 +1,127 @@
 /* style.css */
 
-/* Global Box Sizing */
-*,
-*::before,
-*::after {
-    box-sizing: border-box;
+/* 1. CSS Variables Definition */
+:root {
+    --font-primary: Vazirmatn, sans-serif;
+    --font-secondary: Arial, Helvetica, sans-serif;
+
+    /* Light Mode (Default) */
+    --bg-main: #f4f7f6;
+    --bg-card: #ffffff;
+    --bg-input: #ffffff;
+    --bg-button: #007bff;
+    --bg-button-hover: #0056b3;
+    --bg-button-secondary: #e9ecef;
+    --bg-button-secondary-hover: #dee2e6;
+    --bg-accent-subtle: #f8f9fa;
+    --bg-highlight: #fff3cd;
+    --bg-error-subtle: #fff3f3;
+    --bg-modal-overlay: rgba(0, 0, 0, 0.9);
+    --bg-modal-controls: rgba(0, 0, 0, 0.25);
+    --bg-modal-controls-hover: rgba(255, 255, 255, 0.4);
+    --bg-modal-minimap: rgba(0, 0, 0, 0.65);
+
+
+    --text-primary: #333;
+    --text-secondary: #555;
+    --text-muted: #6c757d;
+    --text-accent: #007bff;
+    --text-accent-hover: #0056b3;
+    --text-light: #ffffff; /* Text on dark backgrounds, like primary buttons */
+    --text-heading: #1f3a65;
+    --text-success: #28a745;
+    --text-error: #dc3545;
+    --text-highlight: #856404;
+
+    --border-primary: #ced4da;
+    --border-secondary: #dee2e6;
+    --border-light: #eee;
+    --border-focus: #007bff;
+    --border-active-pagination: #007bff;
+
+    --shadow-card: rgba(0, 0, 0, 0.08);
+    --shadow-card-hover: rgba(0, 0, 0, 0.12);
+    --shadow-focus: rgba(0, 123, 255, 0.25);
+    --shadow-pagination: rgba(0,0,0,0.1);
+    --shadow-modal: rgba(0,0,0,0.5);
+    --text-shadow-modal: rgba(0,0,0,0.5);
+
+    --history-tag-bg: var(--bg-button-secondary);
+    --history-tag-bg-hover: var(--text-accent);
+    --history-tag-text-hover: var(--text-light);
+
+    --pagination-bg: var(--bg-card);
+    --pagination-active-bg: var(--text-accent);
+    --pagination-disabled-bg: var(--bg-accent-subtle);
 }
 
-/* Basic & Body Styling */
+body.dark-mode {
+    /* Dark Mode Overrides */
+    --bg-main: #121212;
+    --bg-card: #1e1e1e;
+    --bg-input: #2c2c2c;
+    --bg-button: #0088cc;
+    --bg-button-hover: #006699;
+    --bg-button-secondary: #3a3a3a;
+    --bg-button-secondary-hover: #4a4a4a;
+    --bg-accent-subtle: #2c2c2c;
+    --bg-highlight: #574a00;
+    --bg-error-subtle: #4d2222;
+    --bg-modal-overlay: rgba(0, 0, 0, 0.95);
+    --bg-modal-controls: rgba(255, 255, 255, 0.15);
+    --bg-modal-controls-hover: rgba(255, 255, 255, 0.3);
+    --bg-modal-minimap: rgba(0, 0, 0, 0.8);
+
+
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --text-muted: #888888;
+    --text-accent: #34a4ff;
+    --text-accent-hover: #58baff;
+    --text-light: #e0e0e0; /* Text on dark buttons needs to be light */
+    --text-heading: #c0dfff;
+    --text-success: #34c759;
+    --text-error: #ff453a;
+    --text-highlight: #fff3cd;
+
+    --border-primary: #444;
+    --border-secondary: #555;
+    --border-light: #333;
+    --border-focus: #0088cc;
+    --border-active-pagination: #0088cc;
+
+    --shadow-card: rgba(0, 0, 0, 0.4);
+    --shadow-card-hover: rgba(0, 0, 0, 0.6);
+    --shadow-focus: rgba(0, 136, 204, 0.35);
+    --shadow-pagination: rgba(0,0,0,0.2);
+    --shadow-modal: rgba(0,0,0,0.7);
+    --text-shadow-modal: rgba(0,0,0,0.7);
+
+    --history-tag-bg: var(--bg-button-secondary);
+    --history-tag-bg-hover: var(--text-accent);
+    --history-tag-text-hover: var(--bg-card); /* Darker text on lighter hover for dark mode */
+
+    --pagination-bg: var(--bg-card);
+    --pagination-active-bg: var(--text-accent);
+    --pagination-disabled-bg: var(--bg-accent-subtle);
+}
+
+
+/* 2. Global Box Sizing & Body */
+*, *::before, *::after { box-sizing: border-box; }
+
 body {
     margin: 0;
-    font-family: Vazirmatn, sans-serif;
+    font-family: var(--font-primary);
     line-height: 1.6;
-    background-color: #f4f7f6;
-    color: #333;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
     padding-top: 20px;
     direction: rtl;
     text-align: right;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
-
-/* Disable body scroll when modal is open */
-body.modal-open {
-    overflow: hidden;
-}
+body.modal-open { overflow: hidden; }
 
 .container {
     width: 100%;
@@ -31,15 +130,53 @@ body.modal-open {
     padding: 0 15px;
 }
 
-/* Loading Spinner Basic Styles */
+/* Theme Toggle Button Styling */
+.theme-toggle-container {
+    text-align: left;
+    margin-bottom: 15px;
+    padding: 0 15px;
+}
+#themeToggleBtn {
+    background-color: var(--bg-card);
+    color: var(--text-accent);
+    border: 1px solid var(--border-primary);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s, transform 0.2s;
+    box-shadow: 0 1px 3px var(--shadow-card);
+}
+#themeToggleBtn:hover {
+    background-color: var(--bg-button-secondary-hover);
+    transform: scale(1.05);
+}
+#themeToggleBtn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--shadow-focus);
+}
+#themeToggleBtn .fa-moon { display: none; }
+body.dark-mode #themeToggleBtn .fa-sun { display: none; }
+body.dark-mode #themeToggleBtn .fa-moon { display: inline-block; }
+
+
+/* Loading Spinner */
 .spinner {
-    border: 4px solid rgba(0, 0, 0, 0.1);
-    border-left-color: #007bff;
+    border: 4px solid rgba(0, 0, 0, 0.1); 
+    border-left-color: var(--text-accent); 
     border-radius: 50%;
     width: 30px;
     height: 30px;
     animation: spin 1s linear infinite;
     display: none;
+}
+body.dark-mode .spinner {
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-left-color: var(--text-accent);
 }
 
 @keyframes spin {
@@ -47,7 +184,6 @@ body.modal-open {
     100% { transform: rotate(360deg); }
 }
 
-/* Loading spinner positioned within a container */
 .loading-container {
      display: flex;
      flex-direction: column;
@@ -55,38 +191,34 @@ body.modal-open {
      align-items: center;
      min-height: 150px;
      font-size: 1.1rem;
-     color: #555;
+     color: var(--text-secondary);
      padding: 20px;
 }
  .loading-container .spinner { margin-bottom: 15px; }
  .loading-container p { margin: 0; text-align: center; }
 
-
-/* Search Section Styling */
+/* Search Section */
 .subscribe {
-    background-color: #ffffff;
+    background-color: var(--bg-card);
     padding: 20px;
     margin-bottom: 30px;
     border-radius: 10px;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 18px var(--shadow-card);
 }
-
 .subscribe-inputs1 {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-
 .subscribe-inputs1 > div {
     width: 100%;
     text-align: right !important;
     font-size: 16px;
-    color: #1f3a65;
+    color: var(--text-heading);
     padding: 5px 0;
     margin-bottom: 15px;
     font-weight: 700;
 }
-
 .subscribe-inputs1 form {
     display: flex;
     align-items: center;
@@ -94,77 +226,57 @@ body.modal-open {
     max-width: 600px;
     gap: 15px;
 }
-
-/* Input and Clear Button Container */
  .input-with-clear {
      flex-grow: 1;
      position: relative;
      display: flex;
      align-items: center;
  }
-
 .subscribe-inputs1 input[type="text"] {
     flex-grow: 1;
     padding: 14px 18px;
-    border: 1px solid #ced4da;
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border-primary);
     border-radius: 6px;
     font-size: 1.1rem;
-    font-family: Vazirmatn, sans-serif;
+    font-family: var(--font-primary);
 }
 .subscribe-inputs1 input[type="text"]::-ms-clear { display: none; width : 0; height: 0; }
 .subscribe-inputs1 input[type="text"]::-webkit-search-cancel-button { display: none; }
-
 .subscribe-inputs1 input[type="text"]:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 0.2rem var(--shadow-focus);
     outline: none;
 }
-
-
  .input-with-clear .clear-input {
      position: absolute;
      top: 50%;
      transform: translateY(-50%);
      font-size: 1.4rem;
-     color: #999;
+     color: var(--text-muted);
      cursor: pointer;
      display: none;
      transition: color 0.2s ease;
      z-index: 2;
      padding: 0 5px;
      line-height: 1;
-     border-radius: 50%; /* For focus outline */
+     border-radius: 50%;
  }
- .input-with-clear[dir="rtl"] .clear-input {
-     left: auto;
-     right: 10px;
- }
- .input-with-clear[dir="rtl"] input[type="text"] {
-     padding-left: 18px;
-     padding-right: 40px;
- }
-  .input-with-clear[dir="ltr"] .clear-input {
-     right: auto;
-     left: 10px;
- }
-  .input-with-clear[dir="ltr"] input[type="text"] {
-      padding-left: 40px;
-      padding-right: 18px;
-  }
- .input-with-clear .clear-input:hover {
-     color: #666;
- }
+ .input-with-clear[dir="rtl"] .clear-input { left: auto; right: 10px; }
+ .input-with-clear[dir="rtl"] input[type="text"] { padding-left: 18px; padding-right: 40px; }
+  .input-with-clear[dir="ltr"] .clear-input { right: auto; left: 10px; }
+  .input-with-clear[dir="ltr"] input[type="text"] { padding-left: 40px; padding-right: 18px; }
+ .input-with-clear .clear-input:hover { color: var(--text-secondary); }
  .input-with-clear .clear-input:focus {
     outline: none;
-    color: #333; 
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 2px var(--shadow-focus);
  }
-
-
 .subscribe-inputs1 input[type="submit"] {
     padding: 14px 30px;
-    background-color: #007bff;
-    color: white;
+    background-color: var(--bg-button);
+    color: var(--text-light);
     border: none;
     cursor: pointer;
     border-radius: 6px;
@@ -175,51 +287,28 @@ body.modal-open {
 }
 .subscribe-inputs1 input[type="submit"]:focus {
     outline: none;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5);
+    box-shadow: 0 0 0 0.2rem var(--shadow-focus);
 }
-.subscribe-inputs1 input[type="submit"]:hover {
-    background-color: #0056b3;
-}
- .subscribe-inputs1 input[type="submit"]:active {
-    transform: scale(0.98);
-}
+.subscribe-inputs1 input[type="submit"]:hover { background-color: var(--bg-button-hover); }
+ .subscribe-inputs1 input[type="submit"]:active { transform: scale(0.98); }
 
-/* Results Area Styling */
-#simulationResult {
-    margin: 20px auto;
-    max-width: 950px;
-    padding: 0 15px;
-}
-
+/* Results Area */
 #simulationResult.error {
-    color: #dc3545;
-    border: 1px dashed #dc3545;
-    background-color: #fff3f3;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: right;
+    color: var(--text-error);
+    border: 1px dashed var(--text-error);
+    background-color: var(--bg-error-subtle);
 }
 #simulationResult.error p { margin: 0 0 10px 0; }
 #simulationResult.error ul { margin-top: 5px; padding-right: 20px; }
-
- .results-list {
-     list-style: none;
-     padding: 0;
-     margin: 0;
- }
-  .results-list li {
-      margin-bottom: 20px;
-  }
-  .results-list li:last-child {
-      margin-bottom: 0;
-  }
-
+ .results-list { list-style: none; padding: 0; margin: 0; }
+  .results-list li { margin-bottom: 20px; }
+  .results-list li:last-child { margin-bottom: 0; }
 
 /* Drug Card Styling */
 .drug-card {
-    background-color: #ffffff;
+    background-color: var(--bg-card);
     border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 15px var(--shadow-card);
     padding: 25px;
     display: flex;
     align-items: flex-start;
@@ -229,12 +318,10 @@ body.modal-open {
     direction: rtl;
     text-align: right;
 }
-
 .drug-card:hover {
      transform: translateY(-5px);
-     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+     box-shadow: 0 8px 25px var(--shadow-card-hover);
 }
-
 .drug-card .card-image {
     flex-shrink: 0;
     width: 200px;
@@ -243,795 +330,316 @@ body.modal-open {
     margin-bottom: 15px;
     order: 1;
     cursor: zoom-in;
-    border-radius: 6px; /* For focus outline */
+    border-radius: 6px;
 }
-.drug-card .card-image:focus-within, /* if image itself can't take focus reliably */
+.drug-card .card-image:focus-within,
 .drug-card .card-image:focus {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.5);
+    box-shadow: 0 0 0 3px var(--shadow-focus);
 }
-
  .drug-card .card-image img {
     display: block;
     max-width: 100%;
     height: auto;
     border-radius: 6px;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-light);
     padding: 5px;
-    background-color: white;
+    background-color: var(--bg-card);
  }
-
-
-.drug-card .card-content {
-    flex-grow: 1;
-    min-width: 0;
-    order: 2;
-}
-
+.drug-card .card-content { flex-grow: 1; min-width: 0; order: 2; }
 .drug-card h3 {
-    margin-top: 0;
-    margin-bottom: 8px;
-    color: #1f3a65;
-    font-size: 1.6rem;
-    font-weight: 800;
-    word-break: break-word;
-    font-family: Vazirmatn, sans-serif;
+    margin-top: 0; margin-bottom: 8px; color: var(--text-heading);
+    font-size: 1.6rem; font-weight: 800; word-break: break-word; font-family: var(--font-primary);
 }
-
 .drug-card .english-title {
-    font-size: 1.1rem;
-    color: #555;
-    margin-bottom: 18px;
-    word-break: break-word;
-    direction: ltr;
-    text-align: left;
-    font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 18px;
+    word-break: break-word; direction: ltr; text-align: left; font-family: var(--font-secondary);
 }
-
-.drug-card .main-details {
-     display: flex;
-     align-items: baseline;
-     margin-bottom: 20px;
-     flex-wrap: wrap;
-     gap: 20px;
-}
- .drug-card .price-group {
-     display: flex;
-     align-items: baseline;
-     gap: 8px;
- }
+.drug-card .main-details { display: flex; align-items: baseline; margin-bottom: 20px; flex-wrap: wrap; gap: 20px; }
+ .drug-card .price-group { display: flex; align-items: baseline; gap: 8px; }
  .drug-card .price {
-    font-size: 1.8rem;
-    font-weight: bold;
-    color: #28a745;
-     word-break: break-word;
-     direction: ltr;
-     font-family: Arial, Helvetica, sans-serif;
+    font-size: 1.8rem; font-weight: bold; color: var(--text-success);
+    word-break: break-word; direction: ltr; font-family: var(--font-secondary);
 }
  .drug-card .price-label, .drug-card .price-unit {
-    font-size: 1.2rem;
-    color: #555;
-     font-weight: 600;
-      font-family: Vazirmatn, sans-serif;
+    font-size: 1.2rem; color: var(--text-secondary); font-weight: 600; font-family: var(--font-primary);
  }
-
-
 .drug-card .other-details {
-    max-height: 120px;
-    overflow: hidden;
-    transition: max-height 0.3s ease-in-out;
-    border-top: 1px solid #eee;
-    padding-top: 20px;
-    font-size: 1rem;
-    color: #666;
-    margin-top: 20px;
-    position: relative;
+    max-height: 120px; overflow: hidden; transition: max-height 0.3s ease-in-out;
+    border-top: 1px solid var(--border-light); padding-top: 20px;
+    font-size: 1rem; color: var(--text-muted); margin-top: 20px; position: relative;
 }
 .drug-card .other-details::after {
-    content: "";
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 50px;
-    background: linear-gradient(to top, rgba(255,255,255,1), rgba(255,255,255,0));
-    pointer-events: none;
-    opacity: 1;
-     transition: opacity 0.3s ease;
+    content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 50px;
+    background: linear-gradient(to top, var(--bg-card) 0%, transparent 100%);
+    pointer-events: none; opacity: 1; transition: opacity 0.3s ease;
 }
-
-.drug-card .other-details.expanded {
-    max-height: 1000px;
-}
- .drug-card .other-details.expanded::after {
-    opacity: 0;
-}
-
- .drug-card .detail-row {
-     margin-bottom: 10px;
-     display: flex;
-     flex-wrap: wrap;
-     align-items: baseline;
-     gap: 8px;
- }
+.drug-card .other-details.expanded { max-height: 1000px; }
+ .drug-card .other-details.expanded::after { opacity: 0; }
+ .drug-card .detail-row { margin-bottom: 10px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
  .drug-card .detail-row label {
-     font-weight: bold;
-     flex-shrink: 0;
-     word-break: break-word;
-     color: #444;
-      font-family: Vazirmatn, sans-serif;
+     font-weight: bold; flex-shrink: 0; word-break: break-word;
+     color: var(--text-primary); font-family: var(--font-primary);
  }
- .drug-card .detail-row span,
- .drug-card .detail-row bdo {
-      flex-grow: 1;
-      word-break: break-word;
-      text-align: left;
-      direction: ltr;
-      font-family: Arial, Helvetica, sans-serif;
+ .drug-card .detail-row span, .drug-card .detail-row bdo {
+      flex-grow: 1; word-break: break-word; text-align: left;
+      direction: ltr; font-family: var(--font-secondary);
  }
   .detail-row .copy-button {
-      margin-left: 5px;
-      color: #007bff;
-      cursor: pointer;
-      font-size: 0.9em;
-      transition: color 0.2s ease, transform 0.2s ease;
-      display: inline-flex;
-      align-items: center;
-      vertical-align: middle;
-      position: relative;
-      opacity: 1;
-      border-radius: 3px; /* For focus outline */
+      margin-left: 5px; color: var(--text-accent); cursor: pointer; font-size: 0.9em;
+      transition: color 0.2s ease, transform 0.2s ease; display: inline-flex;
+      align-items: center; vertical-align: middle; position: relative; opacity: 1; border-radius: 3px;
   }
-  .detail-row .copy-button:hover { color: #0056b3; }
+  .detail-row .copy-button:hover { color: var(--text-accent-hover); }
   .detail-row .copy-button:focus {
-      outline: none;
-      color: #0056b3;
-      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+      outline: none; color: var(--text-accent-hover); box-shadow: 0 0 0 2px var(--shadow-focus);
   }
-  .detail-row .copy-button.icon-copied {
-      color: #28a745;
-      transform: scale(1.2);
-  }
-
+  .detail-row .copy-button.icon-copied { color: var(--text-success); transform: scale(1.2); }
     .detail-row .copy-button::after {
-        content: 'کپی شد!';
-        position: absolute;
-        right: 50%;
-        transform: translateX(50%);
-        top: -25px;
-        background-color: #5cb85c;
-        color: white;
-        padding: 2px 5px;
-        border-radius: 3px;
-        font-size: 0.7em;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-         pointer-events: none;
-         white-space: nowrap;
-         font-family: Vazirmatn, sans-serif;
-         z-index: 10;
+        content: 'کپی شد!'; position: absolute; right: 50%; transform: translateX(50%); top: -25px;
+        background-color: var(--text-success); color: var(--text-light);
+        padding: 2px 5px; border-radius: 3px; font-size: 0.7em; opacity: 0;
+        transition: opacity 0.3s ease; pointer-events: none; white-space: nowrap;
+        font-family: var(--font-primary); z-index: 10;
     }
-     .detail-row .copy-button.copied::after {
-         opacity: 1;
-     }
-
-
+     .detail-row .copy-button.copied::after { opacity: 1; }
 .drug-card .detail-link {
-    display: inline-block;
-    margin-top: 25px;
-    padding: 10px 25px;
-    background-color: #e9ecef;
-    color: #007bff;
-    text-decoration: none;
-    border-radius: 6px;
-    font-size: 1rem;
+    display: inline-block; margin-top: 25px; padding: 10px 25px;
+    background-color: var(--bg-button-secondary); color: var(--text-accent); text-decoration: none;
+    border-radius: 6px; font-size: 1rem;
     transition: background-color 0.2s ease-in-out, color 0.2s ease, box-shadow 0.2s ease;
-    font-weight: 500;
-    font-family: Vazirmatn, sans-serif;
-    cursor: pointer;
+    font-weight: 500; font-family: var(--font-primary); cursor: pointer;
 }
-.drug-card .detail-link:hover {
-    background-color: #dee2e6;
-    color: #0056b3;
-}
+.drug-card .detail-link:hover { background-color: var(--bg-button-secondary-hover); color: var(--text-accent-hover); }
 .drug-card .detail-link:focus {
-    outline: none;
-    background-color: #d4dae0;
-    color: #0056b3;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+    outline: none; background-color: var(--bg-button-secondary-hover);
+    color: var(--text-accent-hover); box-shadow: 0 0 0 2px var(--shadow-focus);
 }
-
  .expand-details-button {
-     display: block;
-     width: 100%;
-     text-align: center;
-     background: none;
-     border: none;
-     color: #007bff;
-     cursor: pointer;
-     font-size: 0.9em;
-     margin-top: 10px;
-     padding: 5px;
-     transition: color 0.2s ease;
-     font-family: Vazirmatn, sans-serif;
-     border-radius: 4px; 
+     display: block; width: 100%; text-align: center; background: none; border: none;
+     color: var(--text-accent); cursor: pointer; font-size: 0.9em; margin-top: 10px;
+     padding: 5px; transition: color 0.2s ease; font-family: var(--font-primary); border-radius: 4px;
  }
-  .expand-details-button:hover { color: #0056b3; }
+  .expand-details-button:hover { color: var(--text-accent-hover); }
   .expand-details-button:focus {
-    outline: none;
-    color: #0056b3;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+    outline: none; color: var(--text-accent-hover); box-shadow: 0 0 0 2px var(--shadow-focus);
   }
-  .expand-details-button::after {
-      content: 'نمایش بیشتر \25BC'; 
-      margin-right: 5px;
-  }
-  .expand-details-button.expanded::after {
-      content: 'نمایش کمتر \25B2'; 
-      margin-right: 5px;
-  }
-     .drug-card .other-details:not(.is-collapsible) + .expand-details-button {
-         display: none !important;
-     }
+  .expand-details-button::after { content: 'نمایش بیشتر \25BC'; margin-right: 5px; }
+  .expand-details-button.expanded::after { content: 'نمایش کمتر \25B2'; margin-right: 5px; }
+     .drug-card .other-details:not(.is-collapsible) + .expand-details-button { display: none !important; }
 
-
-/* Pagination Styling */
-.pagination-container {
-    margin-top: 40px;
-    margin-bottom: 40px;
-    text-align: center;
-}
+/* Pagination */
+.pagination-container { margin-top: 40px; margin-bottom: 40px; text-align: center; }
 .pagination {
-    display: inline-flex;
-    padding: 0;
-    margin: 0;
-    list-style: none;
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: inline-flex; padding: 0; margin: 0; list-style: none;
+    border-radius: 6px; overflow: hidden; box-shadow: 0 2px 5px var(--shadow-pagination);
 }
 .pagination li a {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 12px 16px;
-    border: 1px solid #dee2e6;
-    color: #007bff;
-    text-decoration: none;
+    display: flex; justify-content: center; align-items: center; padding: 12px 16px;
+    border: 1px solid var(--border-secondary); color: var(--text-accent); text-decoration: none;
     transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-    min-width: 40px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    direction: ltr;
-    font-family: Arial, Helvetica, sans-serif;
-    cursor: pointer;
-    background-color: #fff;
-    position: relative; /* For z-index on focus */
+    min-width: 40px; font-size: 1.1rem; font-weight: 600; direction: ltr;
+    font-family: var(--font-secondary); cursor: pointer; background-color: var(--pagination-bg); position: relative;
 }
-.pagination li:first-child a {
-    border-top-right-radius: 6px;
-    border-bottom-right-radius: 6px;
-}
- .pagination li:last-child a {
-    border-top-left-radius: 6px;
-    border-bottom-left-radius: 6px;
-     border-left-width: 1px;
- }
+.pagination li:first-child a { border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+ .pagination li:last-child a { border-top-left-radius: 6px; border-bottom-left-radius: 6px; border-left-width: 1px; }
 .pagination li:not(:last-child) a { border-left-width: 0; }
-.pagination li a:hover {
-    background-color: #e9ecef;
-    border-color: #ced4da;
-}
-.pagination li a:focus { 
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
-    z-index: 2; 
-}
+.pagination li a:hover { background-color: var(--bg-button-secondary-hover); border-color: var(--border-primary); }
+.pagination li a:focus { outline: none; box-shadow: 0 0 0 2px var(--shadow-focus); z-index: 2; }
 .pagination li.active a {
-    background-color: #007bff;
-    border-color: #007bff;
-    color: white;
+    background-color: var(--pagination-active-bg);
+    border-color: var(--border-active-pagination);
+    color: var(--text-light);
     pointer-events: none;
 }
-.pagination li.active a:focus { /* Ensure active link focus doesn't add a different shadow */
-    box-shadow: none;
-}
+.pagination li.active a:focus { box-shadow: none; }
 .pagination li.disabled a {
-    color: #6c757d;
-    pointer-events: none;
-    background-color: #f8f9fa;
-     border-color: #dee2e6;
+    color: var(--text-muted); pointer-events: none;
+    background-color: var(--pagination-disabled-bg); border-color: var(--border-secondary);
 }
-.pagination li.disabled a:focus {
-    box-shadow: none; /* No focus indication for disabled items */
-}
+.pagination li.disabled a:focus { box-shadow: none; }
 
-
-/* No Results / Suggestions Styling */
+/* No Results / Suggestions */
 .no-results-container {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-    padding: 30px 25px;
-    text-align: center;
-    direction: rtl;
-     font-family: Vazirmatn, sans-serif;
+    background-color: var(--bg-card); border-radius: 10px;
+    box-shadow: 0 4px 15px var(--shadow-card); padding: 30px 25px;
+    text-align: center; direction: rtl; font-family: var(--font-primary);
 }
- .no-results-container h3 {
-    color: #1f3a65;
-    font-size: 1.5rem;
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-weight: 700;
- }
- .no-results-container .suggestions-list {
-     list-style: none;
-     padding: 0;
-     margin: 0;
-     text-align: right;
- }
+ .no-results-container h3 { color: var(--text-heading); font-size: 1.5rem; margin-top: 0; margin-bottom: 20px; font-weight: 700; }
+ .no-results-container .suggestions-list { list-style: none; padding: 0; margin: 0; text-align: right; }
   .no-results-container .suggestions-list li { margin-bottom: 12px; }
   .no-results-container .suggestions-list li a {
-      color: #007bff;
-      text-decoration: none;
-      font-size: 1.05rem;
+      color: var(--text-accent); text-decoration: none; font-size: 1.05rem;
       transition: color 0.2s ease, text-decoration 0.2s ease, box-shadow 0.2s ease;
-      font-weight: 500;
-      padding: 3px 0;
-      display: inline-block;
-      border-radius: 3px; /* For focus outline */
+      font-weight: 500; padding: 3px 0; display: inline-block; border-radius: 3px;
   }
-   .no-results-container .suggestions-list li a:hover {
-       text-decoration: underline;
-       color: #0056b3;
-   }
+   .no-results-container .suggestions-list li a:hover { text-decoration: underline; color: var(--text-accent-hover); }
    .no-results-container .suggestions-list li a:focus {
-       outline: none;
-       text-decoration: underline;
-       color: #0056b3;
-       box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
+       outline: none; text-decoration: underline; color: var(--text-accent-hover);
+       box-shadow: 0 0 0 2px var(--shadow-focus);
    }
 
-/* --- Modal (Lightbox) Styling --- */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.9);
-    z-index: 1040;
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
- .app-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 1050;
-    display: none;
-    max-width: 95%;
-    max-height: 95%;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-     border-radius: 8px;
-     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-     background-color: transparent;
- }
-#imageModal {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-     background-color: transparent;
-     flex-direction: column;
-     gap: 15px;
-}
- #modalLoadingSpinner {
-     color: white;
-     font-size: 1.2rem;
-     position: absolute;
-     top: 50%;
-     left: 50%;
-     transform: translate(-50%, -50%);
-     z-index: 1051;
-     display: none;
-     text-shadow: 0 0 5px rgba(0,0,0,0.5);
- }
+/* Modal (Lightbox) */
+.modal-overlay { background-color: var(--bg-modal-overlay); }
+.app-modal { box-shadow: 0 5px 15px var(--shadow-modal); }
+#imageModal { display: flex; justify-content: center; align-items: center; background-color: transparent; flex-direction: column; gap: 15px; }
+#modalLoadingSpinner { color: #fff; font-size: 1.2rem; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1051; display: none; text-shadow: 0 0 5px var(--text-shadow-modal); }
 .zoomed-image {
-    display: block;
-    max-width: 100%;
-    max-height: calc(100vh - 80px); 
-    height: auto;
-    margin: auto;
-    object-fit: contain;
-    cursor: grab;
-    touch-action: pan-x pan-y;
-    user-select: none;
-    border: none;
-    padding: 0;
-    background: none;
-    display: none;
-    transition: opacity 0.2s ease-in-out; 
+    display: block; max-width: 100%; max-height: calc(100vh - 80px); height: auto; margin: auto;
+    object-fit: contain; cursor: grab; touch-action: pan-x pan-y; user-select: none;
+    border: none; padding: 0; background: none; display: none; transition: opacity 0.2s ease-in-out;
 }
 .modal-close {
-    position: fixed;
-    top: 15px;
-    right: 15px;
-    font-size: 40px;
-    color: #fff;
-    cursor: pointer;
-    z-index: 1060;
+    position: fixed; top: 15px; right: 15px; font-size: 40px; color: #fff; cursor: pointer; z-index: 1060;
     transition: color 0.3s ease, opacity 0.3s ease, transform 0.2s ease;
-    text-shadow: 0 0 5px rgba(0,0,0,0.5);
-    opacity: 0;
-    display: none;
-    pointer-events: auto;
-    line-height: 1;
-    border-radius: 50%; /* For focus styling */
+    text-shadow: 0 0 5px var(--text-shadow-modal); opacity: 0; display: none; pointer-events: auto; line-height: 1; border-radius: 50%;
 }
-.modal-close:hover {
-    color: #ccc;
-    transform: scale(1.1);
-}
-.modal-close:focus {
-    outline: none;
-    color: #fff;
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
-    transform: scale(1.1);
-}
-
+.modal-close:hover { color: #ccc; transform: scale(1.1); }
+.modal-close:focus { outline: none; color: #fff; box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); transform: scale(1.1); }
 .modal-nav-button {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1055;
-    background-color: rgba(0, 0, 0, 0.25);
-    color: #fff;
-    border: none;
-    padding: 15px;
-    cursor: pointer;
-    font-size: 2rem;
+    position: fixed; top: 50%; transform: translateY(-50%); z-index: 1055;
+    background-color: var(--bg-modal-controls); color: #fff; border: none; padding: 15px;
+    cursor: pointer; font-size: 2rem;
     transition: background-color 0.3s ease, opacity 0.3s ease, transform 0.2s ease;
-    user-select: none;
-     display: none;
-     opacity: 0;
-     pointer-events: auto;
-     border-radius: 50%;
-     width: 50px;
-     height: 50px;
-     display: flex;
-     justify-content: center;
-     align-items: center;
+    user-select: none; display: none; opacity: 0; pointer-events: auto; border-radius: 50%;
+    width: 50px; height: 50px; display: flex; justify-content: center; align-items: center;
 }
-.modal-nav-button:hover {
-    background-color: rgba(255, 255, 255, 0.4);
-    transform: translateY(-50%) scale(1.05);
-}
+.modal-nav-button:hover { background-color: var(--bg-modal-controls-hover); transform: translateY(-50%) scale(1.05); }
 .modal-nav-button:focus {
-    outline: none;
-    background-color: rgba(255, 255, 255, 0.45);
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
-    transform: translateY(-50%) scale(1.05);
+    outline: none; background-color: var(--bg-modal-controls-hover);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5); transform: translateY(-50%) scale(1.05);
 }
 .prev-image-button { left: 10px; }
  .next-image-button { right: 10px; }
-
 .modal-caption {
-    position: fixed;
-    bottom: 10px;
-    left: 10px;
-    right: 10px;
-    text-align: center;
-    color: #fff;
-    font-size: 0.9rem;
-    z-index: 1055;
-    display: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    text-shadow: 0 0 5px rgba(0,0,0,0.7);
-    pointer-events: none;
-    background-color: rgba(0,0,0,0.3);
-    padding: 5px 8px;
-    border-radius: 4px;
-    box-sizing: border-box;
+    position: fixed; bottom: 10px; left: 10px; right: 10px; text-align: center; color: #fff;
+    font-size: 0.9rem; z-index: 1055; display: none; opacity: 0; transition: opacity 0.3s ease;
+    text-shadow: 0 0 5px var(--text-shadow-modal); pointer-events: none;
+    background-color: rgba(0,0,0,0.3); padding: 5px 8px; border-radius: 4px; box-sizing: border-box;
 }
- #modalMiniMap {
-     position: fixed;
-     bottom: 45px; 
-     left: 0;
-     right: 0;
-     z-index: 1055;
-     display: none;
-     text-align: center;
-     padding: 8px 0;
-     background-color: rgba(0, 0, 0, 0.65);
-     overflow-x: auto;
-     white-space: nowrap;
-     scrollbar-width: thin;
-     scrollbar-color: rgba(255,255,255,0.4) rgba(0,0,0,0.3);
-     opacity: 0;
-     transition: opacity 0.3s ease;
-     -webkit-overflow-scrolling: touch;
+body.dark-mode .modal-caption { background-color: rgba(0,0,0,0.5); }
+#modalMiniMap {
+     position: fixed; bottom: 45px; left: 0; right: 0; z-index: 1055; display: none; text-align: center;
+     padding: 8px 0; background-color: var(--bg-modal-minimap); overflow-x: auto; white-space: nowrap;
+     scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.4) rgba(0,0,0,0.3);
+     opacity: 0; transition: opacity 0.3s ease; -webkit-overflow-scrolling: touch;
  }
-  #modalMiniMap::-webkit-scrollbar-thumb {
-      background-color: rgba(255,255,255,0.4);
-      border-radius: 10px;
-  }
-   #modalMiniMap::-webkit-scrollbar-track {
-       background: rgba(0,0,0,0.3);
-   }
- #modalMiniMap img {
-     width: 45px; 
-     height: 45px;
-     object-fit: cover;
-     border: 2px solid transparent;
-     margin: 0 5px; 
-     cursor: pointer;
-     transition: border-color 0.2s ease, transform 0.1s ease;
-     border-radius: 4px;
-     background-color: white;
-     padding: 2px;
+body.dark-mode #modalMiniMap { scrollbar-color: rgba(200,200,200,0.5) rgba(20,20,20,0.4); }
+#modalMiniMap::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.4); border-radius: 10px; }
+#modalMiniMap::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+#modalMiniMap img {
+     width: 45px; height: 45px; object-fit: cover; border: 2px solid transparent; margin: 0 5px;
+     cursor: pointer; transition: border-color 0.2s ease, transform 0.1s ease;
+     border-radius: 4px; background-color: var(--bg-card); padding: 2px;
  }
- #modalMiniMap img:focus {
-    outline: 2px solid #007bff;
-    outline-offset: 1px;
-    border-color: #007bff; 
- }
- #modalMiniMap img.active {
-     border-color: #007bff;
-     transform: scale(1.1);
- }
-  #modalMiniMap img.active:focus {
-    outline-color: #0056b3; 
- }
-  #modalMiniMap img:hover:not(.active) {
-      border-color: rgba(0, 123, 255, 0.5);
-      transform: scale(1.05);
-  }
+#modalMiniMap img:focus { outline: 2px solid var(--border-focus); outline-offset: 1px; border-color: var(--border-focus); }
+#modalMiniMap img.active { border-color: var(--text-accent); transform: scale(1.1); }
+#modalMiniMap img.active:focus { outline-color: var(--text-accent-hover); }
+#modalMiniMap img:hover:not(.active) { border-color: var(--text-accent-hover); transform: scale(1.05); }
 
-/* Sorting Controls Styling */
-.sort-controls {
-    margin-bottom: 20px;
-    text-align: left;
-     display: flex;
-     align-items: center;
-     gap: 10px;
-}
- .sort-controls label {
-     font-weight: bold;
-     font-size: 0.95rem;
+/* Sort/Filter Controls */
+.sort-controls { margin-bottom: 20px; text-align: left; display: flex; align-items: center; gap: 10px; }
+.sort-controls label, .filter-controls label { color: var(--text-primary); font-weight: bold; font-size: 0.95rem; }
+.sort-controls select, .filter-controls select, .filter-controls input[type="text"] {
+     padding: 8px 12px; background-color: var(--bg-input); color: var(--text-primary);
+     border: 1px solid var(--border-primary); border-radius: 4px; font-size: 0.9rem;
+     font-family: var(--font-primary); cursor: pointer; min-width: 150px;
  }
- .sort-controls select {
-     padding: 8px 12px;
-     border: 1px solid #ced4da;
-     border-radius: 4px;
-     font-size: 0.9rem;
-     font-family: Vazirmatn, sans-serif;
-     cursor: pointer;
-      min-width: 150px;
-      background-color: #fff;
- }
- .sort-controls select:focus,
- .filter-controls select:focus,
- .filter-controls input[type="text"]:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    outline: none;
- }
-
-
-/* Filter Controls Styling */
 .filter-controls {
-    margin-bottom: 20px;
-    text-align: left;
-    border-top: 1px solid #eee;
-    padding-top: 15px;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-     gap: 15px;
+    margin-bottom: 20px; text-align: left; border-top: 1px solid var(--border-light);
+    padding-top: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 15px;
 }
- .filter-controls .filter-group {
-     display: flex;
-     align-items: center;
-     gap: 5px;
- }
- .filter-controls label {
-     font-weight: bold;
-     font-size: 0.95rem;
- }
- .filter-controls select,
- .filter-controls input[type="text"] {
-     padding: 8px 12px;
-     border: 1px solid #ced4da;
-     border-radius: 4px;
-     font-size: 0.9rem;
-     font-family: Vazirmatn, sans-serif;
-     min-width: 120px;
-     background-color: #fff;
- }
+.filter-controls .filter-group { display: flex; align-items: center; gap: 5px; }
+.filter-controls select, .filter-controls input[type="text"] { min-width: 120px; }
+.sort-controls select:focus, .filter-controls select:focus, .filter-controls input[type="text"]:focus {
+    border-color: var(--border-focus); box-shadow: 0 0 0 0.2rem var(--shadow-focus); outline: none;
+}
 
 /* Highlighted search term */
- .highlight {
-     background-color: #fff3cd;
-     color: #856404;
-     font-weight: bold;
-     padding: 0 2px;
-     border-radius: 2px;
- }
+.highlight { background-color: var(--bg-highlight); color: var(--text-highlight); font-weight: bold; padding: 0 2px; border-radius: 2px; }
 
- /* Search History Styling */
+/* Search History */
 .search-history {
-     margin-top: 20px;
-     padding: 15px;
-     background-color: #fff;
-     border-radius: 8px;
-     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin-top: 20px; padding: 15px; background-color: var(--bg-card);
+    border-radius: 8px; box-shadow: 0 2px 8px var(--shadow-card);
 }
- .search-history h4 {
-     margin-top: 0;
-     margin-bottom: 10px;
-     color: #1f3a65;
-     font-size: 1.2rem;
-     border-bottom: 1px solid #eee;
-     padding-bottom: 8px;
- }
- .search-history ul {
-     list-style: none;
-     padding: 0;
-     margin: 0;
-     display: flex;
-     flex-wrap: wrap;
-     gap: 8px;
- }
- .search-history li a {
-     background-color: #e9ecef;
-     padding: 6px 12px;
-     border-radius: 15px;
-     text-decoration: none;
-     color: #007bff;
-     font-size: 0.9em;
-     transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
-     display: inline-block;
- }
- .search-history li a:hover {
-     background-color: #007bff;
-     color: #fff;
- }
- .search-history li a:focus { 
-    outline: none;
-    background-color: #0056b3; 
-    color: #fff;
-    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.4);
- }
+.search-history h4 {
+    margin-top: 0; margin-bottom: 10px; color: var(--text-heading);
+    font-size: 1.2rem; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;
+}
+.search-history ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.search-history li a {
+    background-color: var(--history-tag-bg); padding: 6px 12px; border-radius: 15px;
+    text-decoration: none; color: var(--text-accent); font-size: 0.9em;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease; display: inline-block;
+}
+.search-history li a:hover { background-color: var(--history-tag-bg-hover); color: var(--history-tag-text-hover); }
+.search-history li a:focus {
+   outline: none; background-color: var(--text-accent-hover);
+   color: var(--history-tag-text-hover); /* Ensure text color matches hover for consistency */
+   box-shadow: 0 0 0 2px var(--shadow-focus);
+}
 
-/* Status Indicator Styling */
- #currentStatusIndicator {
-     font-size: 0.9em;
-     color: #555;
-     text-align: left;
-     margin-bottom: 15px;
-     padding-bottom: 10px;
-     border-bottom: 1px dashed #ddd;
-     background-color: #f8f9fa;
-     padding: 8px 10px;
-     border-radius: 4px;
- }
+/* Status Indicator */
+#currentStatusIndicator {
+    font-size: 0.9em; color: var(--text-secondary); text-align: left; margin-bottom: 15px;
+    padding-bottom: 10px; border-bottom: 1px dashed var(--border-secondary);
+    background-color: var(--bg-accent-subtle); padding: 8px 10px; border-radius: 4px;
+}
 
 /* Back to Top Button */
 #backToTopBtn {
-    display: none; 
-    position: fixed;
-    bottom: 20px;
-    left: 20px; 
-    z-index: 1000;
-    border: none;
-    outline: none;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
-    padding: 0; 
-    border-radius: 50%; 
-    width: 45px;
-    height: 45px;
-    font-size: 1.2rem; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: none; position: fixed; bottom: 20px; left: 20px; z-index: 1000;
+    border: none; outline: none; background-color: var(--bg-button); color: var(--text-light);
+    cursor: pointer; padding: 0; border-radius: 50%; width: 45px; height: 45px;
+    font-size: 1.2rem; box-shadow: 0 2px 5px var(--shadow-card);
     transition: background-color 0.3s ease, opacity 0.3s ease, transform 0.2s ease;
-    opacity: 0.8;
-    display: flex; 
-    align-items: center;
-    justify-content: center;
+    opacity: 0.8; display: flex; align-items: center; justify-content: center;
 }
-
-#backToTopBtn:hover {
-    background-color: #0056b3;
-    opacity: 1;
-    transform: scale(1.05);
-}
-
-#backToTopBtn:focus { 
-    outline: 2px solid #0056b3;
-    outline-offset: 2px;
-    opacity: 1;
-}
+#backToTopBtn:hover { background-color: var(--bg-button-hover); opacity: 1; transform: scale(1.05); }
+#backToTopBtn:focus { outline: 2px solid var(--bg-button-hover); outline-offset: 2px; opacity: 1; }
 
 
-/* Responsive adjustments */
+/* --- Responsive adjustments --- */
 @media (max-width: 992px) {
      .drug-card .card-image { width: 160px; }
      .zoomed-image { max-height: calc(100vh - 100px); }
      .modal-caption { font-size: 1rem; bottom: 15px; }
      #modalMiniMap { bottom: 60px; }
-     .modal-nav-button {
-         padding: 10px; font-size: 1.8rem; width: 40px; height: 40px;
-     }
-
-     .sort-controls, .filter-controls {
-         text-align: right;
-         justify-content: flex-start;
-         flex-direction: column;
-         align-items: flex-start;
-     }
+     .modal-nav-button { padding: 10px; font-size: 1.8rem; width: 40px; height: 40px; }
+     .sort-controls, .filter-controls { text-align: right; justify-content: flex-start; flex-direction: column; align-items: flex-start; }
      .filter-controls .filter-group { margin-left: 0; margin-right: 0; width: 100%; }
-     .sort-controls select, .filter-controls select, .filter-controls input[type="text"]{
-         width: 100%;
-     }
+     .sort-controls select, .filter-controls select, .filter-controls input[type="text"]{ width: 100%; }
 }
 @media (max-width: 768px) {
-     .subscribe-inputs1 form {
-         flex-direction: column; align-items: stretch; gap: 10px;
-     }
+     .subscribe-inputs1 form { flex-direction: column; align-items: stretch; gap: 10px; }
      .input-with-clear[dir="rtl"] input[type="text"] { padding-right: 40px; padding-left: 18px; }
      .input-with-clear[dir="ltr"] input[type="text"] { padding-left: 40px; padding-right: 18px; }
-
     .input-with-clear[dir="rtl"] .clear-input { right: 10px; left: auto; }
     .input-with-clear[dir="ltr"] .clear-input { left: 10px; right: auto; }
-
      .subscribe-inputs1 input[type="submit"] { width: 100%; }
-     .drug-card {
-         flex-direction: column; align-items: center; gap: 15px; padding: 20px;
-     }
-     .drug-card .card-image {
-         width: 120px; margin-left: 0; margin-bottom: 0; order: 1; max-width: none;
-     }
-     .drug-card .card-content {
-         width: 100%; min-width: auto; text-align: center; order: 2;
-     }
+     .drug-card { flex-direction: column; align-items: center; gap: 15px; padding: 20px; }
+     .drug-card .card-image { width: 120px; margin-left: 0; margin-bottom: 0; order: 1; max-width: none; }
+     .drug-card .card-content { width: 100%; min-width: auto; text-align: center; order: 2; }
      .drug-card h3, .drug-card .english-title { text-align: center; }
-     .drug-card .main-details {
-         flex-direction: column; align-items: center; text-align: center; gap: 10px;
-     }
-      .drug-card .price-group {
-         flex-direction: column; align-items: center; gap: 3px;
-     }
+     .drug-card .main-details { flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+      .drug-card .price-group { flex-direction: column; align-items: center; gap: 3px; }
       .drug-card .price-label, .drug-card .price-unit { font-size: 1rem; }
       .drug-card .price-label { margin-bottom: 5px; }
-
-     .drug-card .other-details {
-         text-align: right; padding-top: 15px; margin-top: 15px;
-     }
-     .drug-card .detail-row {
-         flex-direction: column; align-items: flex-start; gap: 5px;
-     }
+     .drug-card .other-details { text-align: right; padding-top: 15px; margin-top: 15px; }
+     .drug-card .detail-row { flex-direction: column; align-items: flex-start; gap: 5px; }
      .drug-card .detail-row label { margin-left: 0; }
      .drug-card .detail-row span, .drug-card .detail-row bdo { text-align: right; }
      .drug-card .detail-link { margin-top: 20px; }
-
-     .pagination li a {
-         padding: 10px 12px; min-width: 35px; font-size: 1rem;
-     }
+     .pagination li a { padding: 10px 12px; min-width: 35px; font-size: 1rem; }
      .pagination li:first-child a { border-top-right-radius: 4px; border-bottom-right-radius: 4px;}
      .pagination li:last-child a { border-top-left-radius: 4px; border-bottom-left-radius: 4px;}
      .no-results-container { padding: 20px; }
      .no-results-container h3 { font-size: 1.3rem; }
-
      .zoomed-image { max-height: calc(100vh - 60px); }
      .modal-close {
-         top: 10px; right: 10px; font-size: 30px;
-         background-color: rgba(0,0,0,0.3); border-radius: 50%;
-         width: 35px; height: 35px; display: flex;
+         top: 10px; right: 10px; font-size: 30px; background-color: rgba(0,0,0,0.3);
+         border-radius: 50%; width: 35px; height: 35px; display: flex;
          align-items: center; justify-content: center; line-height: 0;
      }
      .modal-nav-button {
@@ -1040,15 +648,11 @@ body.modal-open {
      }
      .prev-image-button { left: 5px; }
      .next-image-button { right: 5px; }
-     #modalMiniMap {
-        padding: 5px 0; bottom: 5px;
-        background-color: rgba(0,0,0,0.75);
-     }
+     #modalMiniMap { padding: 5px 0; bottom: 5px; background-color: rgba(0,0,0,0.75); }
      #modalMiniMap img { width: 40px; height: 40px; margin: 0 3px;}
      .modal-caption { bottom: 55px; font-size: 0.85rem; padding: 4px 6px; }
- }
-
- @media (max-width: 480px) {
+}
+@media (max-width: 480px) {
       .subscribe, .drug-card { padding: 15px; }
        .drug-card .card-image { width: 100px; }
        .drug-card h3 { font-size: 1.4rem; }
@@ -1058,19 +662,11 @@ body.modal-open {
        .drug-card .detail-link { padding: 8px 15px; font-size: 0.9rem; }
         .no-results-container { padding: 15px; }
      .no-results-container h3 { font-size: 1.2rem; }
-
-      .sort-controls, .filter-controls {
-           align-items: stretch; gap: 10px;
-      }
-       .filter-controls .filter-group {
-           flex-direction: column; align-items: flex-start; gap: 3px;
-       }
+      .sort-controls, .filter-controls { align-items: stretch; gap: 10px; }
+       .filter-controls .filter-group { flex-direction: column; align-items: flex-start; gap: 3px; }
         .filter-controls label { margin-left: 0; margin-bottom: 5px; }
-
     .zoomed-image { max-height: calc(100vh - 50px); }
-    .modal-nav-button {
-         padding: 8px; font-size: 1.6rem; width: 40px; height: 40px;
-     }
+    .modal-nav-button { padding: 8px; font-size: 1.6rem; width: 40px; height: 40px; }
     #modalMiniMap img { width: 35px; height: 35px; }
     .modal-caption { font-size: 0.8rem; bottom: 50px; }
- }
+}
