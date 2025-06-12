@@ -29,7 +29,7 @@ const ImageModal = {
         this.miniMapContainer = document.getElementById('modalMiniMap');
 
         if (this.imageOverlay) this.imageOverlay.addEventListener('click', this.hide.bind(this));
-        if (this.imageModal) this.imageModal.addEventListener('click', this.hide.bind(this));
+        if (this.imageModal) this.imageModal.addEventListener('click', this.hide.bind(this)); // Click on modal background (not content) closes
         if (this.closeButton) {
             this.closeButton.addEventListener('click', this.hide.bind(this));
             this.closeButton.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') this.hide.bind(this)(e); });
@@ -37,6 +37,7 @@ const ImageModal = {
         if (this.prevButton) this.prevButton.addEventListener('click', function(e){ e.stopPropagation(); this.showPrev(); }.bind(this));
         if (this.nextButton) this.nextButton.addEventListener('click', function(e){ e.stopPropagation(); this.showNext(); }.bind(this));
 
+        // Prevent modal close when clicking on these specific elements inside the modal
         if (this.zoomedImage) this.zoomedImage.addEventListener('click', function(e){ e.stopPropagation(); });
         if (this.spinner) this.spinner.addEventListener('click', function(e){ e.stopPropagation(); });
         if (this.caption) this.caption.addEventListener('click', function(e){ e.stopPropagation(); });
@@ -56,7 +57,7 @@ const ImageModal = {
      handleMiniMapClick: function(event) {
          const clickedThumbnail = event.target.closest('img');
           if (clickedThumbnail) {
-              event.stopPropagation(); // Prevent modal close
+              event.stopPropagation(); // Prevent modal close from mini-map click
               const index = parseInt(clickedThumbnail.getAttribute('data-index'));
                if (!isNaN(index) && index !== this.currentImageIndex) {
                    this.jumpToImage(index);
@@ -153,7 +154,7 @@ const ImageModal = {
             if(this.miniMapContainer) this.miniMapContainer.style.display = 'none';
             if(this.zoomedImage) { this.zoomedImage.src = ''; this.zoomedImage.alt = ''; }
             if(this.spinner) this.spinner.style.display = 'none';
-            if(this.zoomedImage) this.zoomedImage.style.display = 'block'; // Should be visible by default, displayCurrent handles hiding if loading
+            if(this.zoomedImage) this.zoomedImage.style.display = 'block';
             this.currentGalleryImages = [];
             this.currentMiniMapThumbnails = [];
             this.currentImageIndex = 0;
@@ -172,11 +173,13 @@ const ImageModal = {
         if (!this.zoomedImage || !this.spinner || !this.caption || !this.prevButton || !this.nextButton || !this.miniMapContainer) return;
 
         this.spinner.style.display = 'block';
-        this.zoomedImage.style.display = 'none';
+        this.zoomedImage.style.display = 'none'; // Hide while loading new image
+        this.zoomedImage.style.opacity = 0;      // For fade-in effect
         this.caption.style.opacity = 0;
         this.prevButton.style.opacity = 0;
         this.nextButton.style.opacity = 0;
         this.miniMapContainer.style.opacity = 0;
+
 
         if (this.currentGalleryImages.length > 0 && this.currentImageIndex >= 0 && this.currentImageIndex < this.currentGalleryImages.length) {
             const imageUrl = this.currentGalleryImages[this.currentImageIndex];
@@ -185,10 +188,12 @@ const ImageModal = {
             const tempImg = new Image();
             tempImg.onload = () => {
                  this.spinner.style.display = 'none';
+                 this.zoomedImage.src = tempImg.src; // Set src before making visible for transition
                  this.zoomedImage.style.display = 'block';
-                 this.zoomedImage.src = tempImg.src;
                  this.updateMiniMapActiveState();
+                 // Slight delay to allow display:block to take effect before opacity transition
                  setTimeout(() => {
+                     this.zoomedImage.style.opacity = 1;
                      this.caption.textContent = `${this.currentDrugTitle ? escapeHtml(this.currentDrugTitle) + ' - ' : ''}${this.currentImageIndex + 1} از ${this.currentGalleryImages.length}`;
                      this.caption.style.display = 'block';
                      this.caption.style.opacity = 1;
@@ -203,7 +208,7 @@ const ImageModal = {
                            this.miniMapContainer.style.display = 'block';
                           setTimeout(() => { this.miniMapContainer.style.opacity = 1; }, 50);
                       }
-                 }, 50);
+                 }, 20); // Small delay for opacity transition
             };
             tempImg.onerror = () => {
                  this.spinner.style.display = 'none';
@@ -276,6 +281,9 @@ const SearchApp = {
     currentFilterKey: 'owner', currentFilterValue: 'all',
     allResultsOnCurrentPage: [],
     LOCAL_STORAGE_HISTORY_KEY: 'drugSearchHistory', MAX_HISTORY_ITEMS: 5,
+    LOCAL_STORAGE_SORT_KEY: 'drugSearchSortKey',
+    LOCAL_STORAGE_SORT_DIR_KEY: 'drugSearchSortDir',
+    LOCAL_STORAGE_FILTER_VAL_KEY: 'drugSearchFilterVal',
     targetBaseUrl: 'https://irc.fda.gov.ir', searchEndpoint: '/nfi/Search',
 
     init: function() {
@@ -286,6 +294,8 @@ const SearchApp = {
         this.clearInputButton = document.getElementById('clearSearchInput');
         this.searchHistoryDiv = document.getElementById('searchHistory');
         this.searchHistoryListUl = document.getElementById('searchHistoryList');
+
+        this.loadUserPreferences(); // Load preferences before other UI setups
 
         ImageModal.init();
         this.attachEventListeners();
@@ -315,10 +325,28 @@ const SearchApp = {
          }
          window.addEventListener('popstate', this.handlePopstate.bind(this));
     },
+
+    loadUserPreferences: function() {
+        const savedSortKey = localStorage.getItem(this.LOCAL_STORAGE_SORT_KEY);
+        const savedSortDir = localStorage.getItem(this.LOCAL_STORAGE_SORT_DIR_KEY);
+        const savedFilterVal = localStorage.getItem(this.LOCAL_STORAGE_FILTER_VAL_KEY);
+
+        if (savedSortKey) {
+            this.currentSortKey = savedSortKey;
+        }
+        if (savedSortDir) {
+            this.currentSortDirection = savedSortDir;
+        }
+        // Assuming currentFilterKey is always 'owner' for now
+        if (savedFilterVal) {
+            this.currentFilterValue = savedFilterVal;
+        }
+    },
+
      showInitialMessages: function() {
           if (this.initialMessage) this.initialMessage.style.display = 'block';
           if (this.mainLoadingSpinner && this.mainLoadingSpinner.parentElement === this.resultDiv) {
-               this.mainLoadingSpinner.parentElement.remove(); // Remove loading container
+               this.mainLoadingSpinner.parentElement.remove();
            }
           this.resultDiv.classList.remove('loading-container', 'error');
           const statusIndicator = this.resultDiv.querySelector('#currentStatusIndicator');
@@ -335,8 +363,8 @@ const SearchApp = {
              if (this.termInput) this.termInput.value = poppedTerm;
              this.handleInputDirection();
              this.handleClearButtonVisibility();
-             this.currentSortKey = 'none'; this.currentSortDirection = 'asc';
-             this.currentFilterKey = 'owner'; this.currentFilterValue = 'all';
+             // When navigating history, re-apply saved preferences or defaults
+             this.loadUserPreferences(); // Could also reset to default if preferred for back/fwd
              if (poppedTerm) {
                 this.performSearch(poppedTerm, poppedPage);
              } else {
@@ -354,7 +382,7 @@ const SearchApp = {
         const value = this.termInput.value;
         const rtlRegex = /[\u0600-\u06FF]/;
         const inputContainer = this.termInput.parentElement;
-        if (rtlRegex.test(value) || value === '') { // Default to RTL if empty for Persian UI
+        if (rtlRegex.test(value) || value === '') {
             this.termInput.style.direction = 'rtl';
             this.termInput.style.textAlign = 'right';
             if (inputContainer) inputContainer.setAttribute('dir', 'rtl');
@@ -373,20 +401,24 @@ const SearchApp = {
          if (!this.termInput) return;
          this.termInput.value = '';
          const inputEvent = new Event('input', { bubbles: true });
-         this.termInput.dispatchEvent(inputEvent); // Triggers visibility and direction handlers
+         this.termInput.dispatchEvent(inputEvent);
          this.termInput.focus();
          this.resultDiv.innerHTML = '';
          this.showInitialMessages();
          history.pushState({}, '', window.location.pathname);
+         // Reset sort/filter to defaults when search is cleared
          this.currentSortKey = 'none'; this.currentSortDirection = 'asc';
          this.currentFilterKey = 'owner'; this.currentFilterValue = 'all';
+         localStorage.removeItem(this.LOCAL_STORAGE_SORT_KEY);
+         localStorage.removeItem(this.LOCAL_STORAGE_SORT_DIR_KEY);
+         localStorage.removeItem(this.LOCAL_STORAGE_FILTER_VAL_KEY);
          this.allResultsOnCurrentPage = [];
      },
     attachEventListeners: function() {
          if (this.searchForm) this.searchForm.addEventListener('submit', this.handleSearchSubmit.bind(this));
          if (this.resultDiv) this.resultDiv.addEventListener('click', this.handleResultAreaClick.bind(this));
          if (this.searchHistoryListUl) this.searchHistoryListUl.addEventListener('click', this.handleHistoryItemClick.bind(this));
-         if (this.resultDiv) { // Event delegation for sort/filter selects
+         if (this.resultDiv) {
             this.resultDiv.addEventListener('change', (event) => {
                 if (event.target.closest('.sort-controls select')) {
                     this.handleSortChange(event);
@@ -407,8 +439,15 @@ const SearchApp = {
              }
             return;
         }
+         // Decide if sort/filter should reset for a *new search term*
+         // Option 1: Reset (current behavior, good for fresh searches)
          this.currentSortKey = 'none'; this.currentSortDirection = 'asc';
          this.currentFilterKey = 'owner'; this.currentFilterValue = 'all';
+         localStorage.removeItem(this.LOCAL_STORAGE_SORT_KEY);
+         localStorage.removeItem(this.LOCAL_STORAGE_SORT_DIR_KEY);
+         localStorage.removeItem(this.LOCAL_STORAGE_FILTER_VAL_KEY);
+         // Option 2: Keep preferences - comment out the lines above
+
          this.performSearch(searchTerm);
          this.saveSearchTermToHistory(searchTerm);
      },
@@ -428,8 +467,8 @@ const SearchApp = {
              const suggestedTerm = clickedSuggestionLink.getAttribute('data-suggested-term');
              if (suggestedTerm && this.termInput) {
                  this.termInput.value = suggestedTerm;
-                 this.handleInputDirection(); // Update direction if term changes
-                 this.handleClearButtonVisibility(); // Update clear button
+                 this.handleInputDirection(); 
+                 this.handleClearButtonVisibility(); 
                  this.performSearch(suggestedTerm);
              }
          } else if (clickedExpandButton) {
@@ -459,10 +498,14 @@ const SearchApp = {
               const [sortKey, sortDirection] = selectedValue.split('-');
                this.currentSortKey = sortKey;
                this.currentSortDirection = sortDirection || 'asc';
+
+               localStorage.setItem(this.LOCAL_STORAGE_SORT_KEY, this.currentSortKey);
+               localStorage.setItem(this.LOCAL_STORAGE_SORT_DIR_KEY, this.currentSortDirection);
+
                if (this.currentSortKey !== 'none') {
                    this.sortResults(this.currentSortKey, this.currentSortDirection);
                } else {
-                   this.filterResults(this.currentFilterKey, this.currentFilterValue); // Re-apply filter to revert to original order within filter
+                   this.filterResults(this.currentFilterKey, this.currentFilterValue);
                }
                this.updateStatusIndicator();
           }
@@ -473,8 +516,11 @@ const SearchApp = {
               const filterKey = changedSelect.getAttribute('data-filter-key');
               const filterValue = changedSelect.value;
                if (filterKey) {
-                    this.currentFilterKey = filterKey;
+                    this.currentFilterKey = filterKey; 
                     this.currentFilterValue = filterValue;
+
+                    localStorage.setItem(this.LOCAL_STORAGE_FILTER_VAL_KEY, this.currentFilterValue);
+                    
                     this.filterResults(filterKey, filterValue);
                      if (this.currentSortKey !== 'none') {
                          this.sortResults(this.currentSortKey, this.currentSortDirection);
@@ -492,8 +538,13 @@ const SearchApp = {
                  this.termInput.value = searchTerm;
                  this.handleInputDirection();
                  this.handleClearButtonVisibility();
+                 // When clicking history, reset sort/filter to defaults or load saved ones for that term (more complex)
+                 // For now, reset to default for simplicity on history click
                  this.currentSortKey = 'none'; this.currentSortDirection = 'asc';
                  this.currentFilterKey = 'owner'; this.currentFilterValue = 'all';
+                 localStorage.removeItem(this.LOCAL_STORAGE_SORT_KEY);
+                 localStorage.removeItem(this.LOCAL_STORAGE_SORT_DIR_KEY);
+                 localStorage.removeItem(this.LOCAL_STORAGE_FILTER_VAL_KEY);
                  this.performSearch(searchTerm);
              }
          }
@@ -508,7 +559,7 @@ const SearchApp = {
      saveSearchTermToHistory: function(term) {
           if (!term || term.length < 2) return;
           let history = JSON.parse(localStorage.getItem(this.LOCAL_STORAGE_HISTORY_KEY)) || [];
-          history = history.filter(item => item.toLowerCase() !== term.toLowerCase()); // Case-insensitive check
+          history = history.filter(item => item.toLowerCase() !== term.toLowerCase());
           history.unshift(term);
           if (history.length > this.MAX_HISTORY_ITEMS) {
               history = history.slice(0, this.MAX_HISTORY_ITEMS);
@@ -527,7 +578,7 @@ const SearchApp = {
                  const a = document.createElement('a');
                  a.href = '#';
                  a.textContent = escapeHtml(term);
-                 a.setAttribute('data-term', term); // Keep original term for data
+                 a.setAttribute('data-term', term);
                  li.appendChild(a);
                  this.searchHistoryListUl.appendChild(li);
              });
@@ -596,15 +647,14 @@ const SearchApp = {
 
              if (tempImageUrls.length > 1) {
                  finalImageUrls = tempImageUrls.slice(0, -1);
-                 if (tempThumbnailUrls.length === tempImageUrls.length) { // Check if lengths were same before potential slice
+                 if (tempThumbnailUrls.length === tempImageUrls.length) {
                      finalThumbnailUrls = tempThumbnailUrls.slice(0, -1);
-                 } else if (tempThumbnailUrls.length > 1) { // If lengths different, but still multiple thumbnails
+                 } else if (tempThumbnailUrls.length > 1) { 
                      finalThumbnailUrls = tempThumbnailUrls.slice(0, -1);
-                     console.warn("Thumbnail and image URL array lengths mismatched. Sliced thumbnails independently based on its own length.");
-                 } 
-                  else { // If not enough thumbnails to slice or lengths were off significantly
-                     finalThumbnailUrls = finalImageUrls; // Fallback to ensure consistency, though it might use full images as thumbs
-                     console.warn("Thumbnail and image URL array lengths mismatched significantly or not enough thumbnails. Using (sliced) full image URLs for thumbnails.");
+                     console.warn("Thumbnail/image URL array lengths mismatched. Sliced thumbnails independently.");
+                 } else { 
+                     finalThumbnailUrls = finalImageUrls; 
+                     console.warn("Thumbnail/image URL array lengths mismatched significantly or not enough thumbnails. Using (sliced) full image URLs for thumbnails.");
                  }
              } else {
                  finalImageUrls = tempImageUrls;
@@ -789,6 +839,9 @@ const SearchApp = {
                           if(SearchApp.termInput) SearchApp.termInput.value = term;
                            SearchApp.currentSortKey = 'none'; SearchApp.currentSortDirection = 'asc';
                            SearchApp.currentFilterKey = 'owner'; SearchApp.currentFilterValue = 'all';
+                           localStorage.removeItem(SearchApp.LOCAL_STORAGE_SORT_KEY);
+                           localStorage.removeItem(SearchApp.LOCAL_STORAGE_SORT_DIR_KEY);
+                           localStorage.removeItem(SearchApp.LOCAL_STORAGE_FILTER_VAL_KEY);
                           SearchApp.performSearch(term, parseInt(page));
                       }
                   });
@@ -797,14 +850,23 @@ const SearchApp = {
          this.ownerFilterSelect = this.resultDiv.querySelector('#ownerFilter');
          this.sortSelect = this.resultDiv.querySelector('#sortSelect');
          this.statusIndicator = this.resultDiv.querySelector('#currentStatusIndicator');
+        
+        // Apply loaded preferences to select elements
         if(this.ownerFilterSelect) this.ownerFilterSelect.value = this.currentFilterValue;
-        if(this.sortSelect) this.sortSelect.value = this.currentSortKey === 'none' ? 'none' : `${this.currentSortKey}-${this.currentSortDirection}`;
+        if(this.sortSelect) {
+            const sortValue = this.currentSortKey === 'none' ? 'none' : `${this.currentSortKey}-${this.currentSortDirection}`;
+            this.sortSelect.value = sortValue;
+        }
+
 
         const resultsListUl = this.resultDiv.querySelector('#resultsList');
         if(resultsListUl) {
             this.allResultsOnCurrentPage = Array.from(resultsListUl.querySelectorAll('li.result-item'));
+            // Apply current filters and sorts from potentially loaded preferences
             this.filterResults(this.currentFilterKey, this.currentFilterValue);
-            if (this.currentSortKey !== 'none') this.sortResults(this.currentSortKey, this.currentSortDirection);
+            if (this.currentSortKey !== 'none') {
+                this.sortResults(this.currentSortKey, this.currentSortDirection);
+            }
             this.updateStatusIndicator();
             this.allResultsOnCurrentPage.forEach(item => {
                 const otherDetails = item.querySelector('.other-details');
@@ -987,7 +1049,7 @@ function getIconicPaginationText(originalText) {
  function escapeHtml(unsafe) {
      if (typeof unsafe !== 'string') return unsafe === null || typeof unsafe === 'undefined' ? '' : String(unsafe);
      return unsafe.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, "\"").replace(/'/g, "'");
- } // Corrected escapeHtml
+ }
  async function copyTextToClipboard(text) {
      try {
          await navigator.clipboard.writeText(text);
