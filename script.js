@@ -239,8 +239,6 @@ const ImageModal = {
                    thumbImg.alt = `نمای کوچک ${index + 1} از ${escapeHtml(this.currentDrugTitle)}`;
                    thumbImg.setAttribute('data-index', index);
                    thumbImg.loading = 'lazy';
-                   // For better keyboard accessibility, wrap in button or add tabindex/role
-                   // For now, relying on click handler and visual focus from CSS
                    this.miniMapContainer.appendChild(thumbImg);
               });
          } else {
@@ -284,6 +282,7 @@ const SearchApp = {
     LOCAL_STORAGE_SORT_KEY: 'drugSearchSortKey',
     LOCAL_STORAGE_SORT_DIR_KEY: 'drugSearchSortDir',
     LOCAL_STORAGE_FILTER_VAL_KEY: 'drugSearchFilterVal',
+    // LOCAL_STORAGE_THEME_KEY defined globally below
     targetBaseUrl: 'https://irc.fda.gov.ir', searchEndpoint: '/nfi/Search',
 
     init: function() {
@@ -1005,6 +1004,49 @@ const SearchApp = {
     }
 };
 
+// --- Theme Toggle Functionality ---
+const LOCAL_STORAGE_THEME_KEY = 'drugSearchTheme';
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+// Icons are referenced after DOMContentLoaded to ensure they exist if script is in <head>
+let sunIcon, moonIcon; 
+
+function applyTheme(theme) {
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (sunIcon) sunIcon.style.display = 'none';
+        if (moonIcon) moonIcon.style.display = 'inline-block';
+        if (themeToggleBtn) themeToggleBtn.setAttribute('aria-label', 'تغییر به حالت روشن');
+    } else {
+        document.body.classList.remove('dark-mode');
+        if (sunIcon) sunIcon.style.display = 'inline-block';
+        if (moonIcon) moonIcon.style.display = 'none';
+        if (themeToggleBtn) themeToggleBtn.setAttribute('aria-label', 'تغییر به حالت تاریک');
+    }
+}
+
+function toggleTheme() {
+    let currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+    let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    localStorage.setItem(LOCAL_STORAGE_THEME_KEY, newTheme);
+    applyTheme(newTheme);
+}
+
+function loadInitialTheme() {
+    const savedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY);
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (savedTheme) {
+        applyTheme(savedTheme);
+    } else if (prefersDark) {
+        applyTheme('dark');
+    } else {
+        applyTheme('light');
+    }
+}
+// --- End Theme Toggle Functionality ---
+
+
 // Back to Top Button Functionality
 const backToTopButton = document.getElementById("backToTopBtn");
 
@@ -1069,12 +1111,18 @@ function getIconicPaginationText(originalText) {
          alert('امکان کپی خودکار وجود ندارد. لطفاً دستی کپی کنید.');
      }
  }
-document.addEventListener('DOMContentLoaded', function() {
-     // Ensure backToTopButton is defined here if the script runs before its HTML element exists
-     // However, since it's outside SearchApp.init, it's better to ensure its element is in HTML first
-     // Or, move the backToTopButton related DOM query and event listener attachment inside DOMContentLoaded
-     // For simplicity, current structure assumes #backToTopBtn exists in HTML when this script part runs.
-     // No, the const backToTopButton is declared globally so it's fine.
 
-     setTimeout(() => { SearchApp.init(); }, 50);
+document.addEventListener('DOMContentLoaded', function() {
+    // Get icon references after DOM is loaded
+    if (themeToggleBtn) { // Ensure themeToggleBtn itself was found
+        sunIcon = themeToggleBtn.querySelector('.fa-sun');
+        moonIcon = themeToggleBtn.querySelector('.fa-moon');
+        themeToggleBtn.addEventListener('click', toggleTheme); // Add listener here
+    }
+    
+    loadInitialTheme(); 
+     
+    setTimeout(() => { 
+         SearchApp.init(); 
+     }, 50);
 });

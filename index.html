@@ -17,8 +17,10 @@
 
     <div class="container">
         <div class="theme-toggle-container">
-            <button id="themeToggleBtn" aria-label="Toggle dark/light mode">
-                <i class="fas fa-sun"></i> <!-- Default to light mode icon (sun) -->
+            <!-- index.html (inside .theme-toggle-container) -->
+            <button id="themeToggleBtn" aria-label="تغییر به حالت تاریک"> <!-- Initial aria-label for light mode -->
+                <i class="fas fa-sun"></i>   <!-- Sun icon, initially visible -->
+                <i class="fas fa-moon"></i>  <!-- Moon icon, initially hidden by CSS -->
             </button>
         </div>
         <section id="subscribe" class="subscribe">
