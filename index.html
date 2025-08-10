@@ -1,13 +1,13 @@
 <!DOCTYPE html>
+<!-- The `dark` class will be added here instantly by the script below -->
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>قیمت‌دارو</title>
 
-    <!-- Persian Font: Vazirmatn -->
+    <!-- Fonts and Icons -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <meta name="theme-color" content="#1E40AF">
@@ -15,35 +15,44 @@
 
     <!-- 
       ==================================================================
-      == THIS IS THE CRUCIAL FIX ==
-      Add this configuration script BEFORE the main Tailwind script.
-      This tells Tailwind to use the 'class' strategy for dark mode.
+      == THE DEFINITIVE FIX: Inline script for flicker-free theme loading ==
       ==================================================================
     -->
     <script>
+        // This script runs immediately, before the page renders, to prevent flashing.
+        (function() {
+            const themeKey = 'drugSearchTheme';
+            try {
+                const savedTheme = localStorage.getItem(themeKey);
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+                // Apply 'dark' class to <html> if saved theme is dark, or if no theme is saved but user prefers dark.
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {
+                // In case of any error, default to light mode.
+                console.error("Failed to apply initial theme:", e);
+                document.documentElement.classList.remove('dark');
+            }
+        })();
+    </script>
+    
+    <!-- Tailwind CSS configuration and CDN script -->
+    <script>
+        // This configuration is essential for `dark:` classes to work.
         tailwind.config = {
             darkMode: 'class',
         }
     </script>
-    
-    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* Custom styles to be used with Tailwind */
-        body {
-            font-family: 'Vazirmatn', sans-serif;
-        }
-        /* This style works because it's standard CSS */
-        .highlight {
-            background-color: #fefcbf; /* yellow-200 */
-            color: #374151; /* gray-700 */
-        }
-        /* This style also works because it's standard CSS responding to the .dark class */
-        .dark .highlight {
-            background-color: #b45309; /* yellow-700 */
-            color: #f3f4f6; /* gray-100 */
-        }
+        body { font-family: 'Vazirmatn', sans-serif; }
+        .highlight { background-color: #fefcbf; color: #374151; }
+        .dark .highlight { background-color: #b45309; color: #f3f4f6; }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
@@ -51,12 +60,14 @@
     <div class="container mx-auto p-4 md:p-6 lg:p-8">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-blue-800 dark:text-blue-400">جستجوی دارو</h1>
-            <button id="themeToggleBtn" aria-label="تغییر به حالت تاریک" class="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <!-- Note: The icons' visibility will be controlled by the main script.js after the page loads. -->
+            <button id="themeToggleBtn" aria-label="تغییر حالت تم" class="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 <i class="fas fa-sun text-xl"></i>
-                <i class="fas fa-moon text-xl hidden"></i>
+                <i class="fas fa-moon text-xl"></i>
             </button>
         </div>
 
+        <!-- The rest of your HTML body remains the same -->
         <section id="subscribe" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
             <div class="w-full">
                 <label for="Term" class="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">داروی مورد نظر را جستجو نمایید</label>
@@ -80,15 +91,11 @@
         </div>
     </div>
 
-    <!-- Modal Overlay -->
+    <!-- Modals and Back to Top Button -->
     <div id="modalOverlay" class="fixed inset-0 bg-black bg-opacity-75 hidden transition-opacity duration-300"></div>
-
-    <!-- Image Modal -->
     <div id="imageModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-labelledby="modalCaption">
         <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-            <div id="modalLoadingSpinner" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg z-10">
-                <div class="spinner animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-            </div>
+            <div id="modalLoadingSpinner" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg z-10"><div class="spinner animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div></div>
             <img id="zoomedImage" class="w-full h-auto object-contain rounded-t-lg flex-grow" src="" alt="Zoomed Image">
             <div id="modalCaption" class="text-center p-4 bg-gray-100 dark:bg-gray-700 text-sm font-semibold rounded-b-lg" aria-live="polite"></div>
             <div id="modalMiniMap" class="p-2 bg-gray-200 dark:bg-gray-900 overflow-x-auto whitespace-nowrap hidden"></div>
@@ -97,13 +104,8 @@
         <button id="prevImageButton" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-4 rounded-full hover:bg-opacity-75 focus:outline-none text-2xl hidden">‹</button>
         <button id="nextImageButton" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-4 rounded-full hover:bg-opacity-75 focus:outline-none text-2xl hidden">›</button>
     </div>
-
-
-     <!-- Back to Top Button -->
-     <button id="backToTopBtn" title="بازگشت به بالا" aria-label="بازگشت به بالا" class="hidden fixed bottom-5 right-5 bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-lg items-center justify-center text-xl transition-opacity">
-        <i class="fas fa-arrow-up"></i>
-    </button>
-
+    <button id="backToTopBtn" title="بازگشت به بالا" aria-label="بازگشت به بالا" class="hidden fixed bottom-5 right-5 bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-lg items-center justify-center text-xl transition-opacity"><i class="fas fa-arrow-up"></i></button>
+    
     <script src="script.js" type="module"></script>
 </body>
 </html>
