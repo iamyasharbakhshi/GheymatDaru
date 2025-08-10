@@ -29,19 +29,15 @@ const ImageModal = {
         this.miniMapContainer = document.getElementById('modalMiniMap');
 
         if (this.imageOverlay) this.imageOverlay.addEventListener('click', this.hide.bind(this));
-        if (this.imageModal) this.imageModal.addEventListener('click', this.hide.bind(this)); 
         if (this.closeButton) {
             this.closeButton.addEventListener('click', this.hide.bind(this));
             this.closeButton.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') this.hide.bind(this)(e); });
         }
-        if (this.prevButton) this.prevButton.addEventListener('click', function(e){ e.stopPropagation(); this.showPrev(); }.bind(this));
-        if (this.nextButton) this.nextButton.addEventListener('click', function(e){ e.stopPropagation(); this.showNext(); }.bind(this));
+        if (this.prevButton) this.prevButton.addEventListener('click', (e) => { e.stopPropagation(); this.showPrev(); });
+        if (this.nextButton) this.nextButton.addEventListener('click', (e) => { e.stopPropagation(); this.showNext(); });
 
-        if (this.zoomedImage) this.zoomedImage.addEventListener('click', function(e){ e.stopPropagation(); });
-        if (this.spinner) this.spinner.addEventListener('click', function(e){ e.stopPropagation(); });
-        if (this.caption) this.caption.addEventListener('click', function(e){ e.stopPropagation(); });
-        if (this.miniMapContainer) this.miniMapContainer.addEventListener('click', this.handleMiniMapClick.bind(this));
-
+        // Prevent modal from closing when clicking on its content
+        if (this.imageModal) this.imageModal.addEventListener('click', (e) => e.stopPropagation());
 
         document.addEventListener('keydown', this.handleKeydown.bind(this));
          if (this.imageModal) {
@@ -56,7 +52,7 @@ const ImageModal = {
      handleMiniMapClick: function(event) {
          const clickedThumbnail = event.target.closest('img');
           if (clickedThumbnail) {
-              event.stopPropagation(); 
+              event.stopPropagation();
               const index = parseInt(clickedThumbnail.getAttribute('data-index'));
                if (!isNaN(index) && index !== this.currentImageIndex) {
                    this.jumpToImage(index);
@@ -65,42 +61,32 @@ const ImageModal = {
      },
 
     handleTouchStart: function(evt) {
-         if (this.imageModal && this.imageModal.style.display === 'flex') {
-            this.xDown = evt.touches[0].clientX;
-            this.yDown = evt.touches[0].clientY;
-         }
+        this.xDown = evt.touches[0].clientX;
+        this.yDown = evt.touches[0].clientY;
     },
     handleTouchMove: function(evt) {
-         if (this.imageModal && this.imageModal.style.display === 'flex') {
-            if (this.xDown !== null && this.yDown !== null) {
-                const xDiff = this.xDown - evt.touches[0].clientX;
-                const yDiff = this.yDown - evt.touches[0].clientY;
-                if (Math.abs(xDiff) > Math.abs(yDiff)) { 
-                    evt.preventDefault();
-                }
-            }
-         }
+        if (this.xDown === null || this.yDown === null) return;
+        const xDiff = this.xDown - evt.touches[0].clientX;
+        const yDiff = this.yDown - evt.touches[0].clientY;
+        if (Math.abs(xDiff) > Math.abs(yDiff)) {
+            evt.preventDefault();
+        }
     },
     handleTouchEnd: function(evt) {
-         if (this.imageModal && this.imageModal.style.display !== 'flex' || (!this.xDown && !this.yDown)) {
-             return;
-         }
+         if (this.xDown === null) return;
          const xUp = evt.changedTouches[0].clientX;
-         const yUp = evt.changedTouches[0].clientY;
          const xDiff = this.xDown - xUp;
-         const yDiff = this.yDown - yUp;
          this.xDown = null;
          this.yDown = null;
+
          const sensitivity = 50;
-         if (Math.abs(xDiff) > Math.abs(yDiff)) {
-             if (Math.abs(xDiff) > sensitivity) {
-                if (xDiff > 0) { this.showNext(); }
-                else { this.showPrev(); }
-             }
+         if (Math.abs(xDiff) > sensitivity) {
+            if (xDiff > 0) { this.showNext(); }
+            else { this.showPrev(); }
          }
     },
     handleKeydown: function(event) {
-        if (this.imageModal && this.imageModal.style.display === 'flex') {
+        if (this.imageModal && !this.imageModal.classList.contains('hidden')) {
             if (event.key === 'Escape') { this.hide(); }
             else if (event.key === 'ArrowLeft') { event.preventDefault(); this.showPrev(); }
             else if (event.key === 'ArrowRight') { event.preventDefault(); this.showNext(); }
@@ -112,54 +98,38 @@ const ImageModal = {
         this.currentImageIndex = initialIndex;
         this.currentDrugTitle = drugTitle || '';
 
-        if (!this.imageOverlay || !this.imageModal || !this.closeButton || !this.caption || !this.prevButton || !this.nextButton || !this.zoomedImage || !this.spinner || !this.miniMapContainer) {
-             return;
-        }
-        this.imageOverlay.style.display = 'block';
-        this.imageModal.style.display = 'flex';
-        this.closeButton.style.display = 'block';
-        this.caption.style.display = 'none';
-        this.prevButton.style.display = 'none';
-        this.nextButton.style.display = 'none';
-        this.miniMapContainer.style.display = 'none';
+        if (!this.imageOverlay || !this.imageModal) return;
+
+        this.imageOverlay.classList.remove('hidden');
+        this.imageModal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
 
         setTimeout(() => {
             this.imageOverlay.style.opacity = 1;
             this.imageModal.style.opacity = 1;
-            this.closeButton.style.opacity = 1;
             this.closeButton.focus();
         }, 10);
-        document.body.classList.add('modal-open');
+
         this.renderMiniMap();
         this.displayCurrent();
     },
     hide: function() {
-         if (!this.imageOverlay || !this.imageModal || !this.closeButton) return;
+        if (!this.imageOverlay || !this.imageModal) return;
+
         this.imageOverlay.style.opacity = 0;
         this.imageModal.style.opacity = 0;
-        this.closeButton.style.opacity = 0;
-        if(this.caption) this.caption.style.opacity = 0;
-        if(this.prevButton) this.prevButton.style.opacity = 0;
-        if(this.nextButton) this.nextButton.style.opacity = 0;
-        if(this.miniMapContainer) this.miniMapContainer.style.opacity = 0;
 
         setTimeout(() => {
-            this.imageOverlay.style.display = 'none';
-            this.imageModal.style.display = 'none';
-            this.closeButton.style.display = 'none';
-            if(this.caption) this.caption.style.display = 'none';
-            if(this.prevButton) this.prevButton.style.display = 'none';
-            if(this.nextButton) this.nextButton.style.display = 'none';
-            if(this.miniMapContainer) this.miniMapContainer.style.display = 'none';
+            this.imageOverlay.classList.add('hidden');
+            this.imageModal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+
             if(this.zoomedImage) { this.zoomedImage.src = ''; this.zoomedImage.alt = ''; }
-            if(this.spinner) this.spinner.style.display = 'none';
-            if(this.zoomedImage) this.zoomedImage.style.display = 'block';
             this.currentGalleryImages = [];
             this.currentMiniMapThumbnails = [];
             this.currentImageIndex = 0;
             this.currentDrugTitle = '';
             if(this.miniMapContainer) this.miniMapContainer.innerHTML = '';
-            document.body.classList.remove('modal-open');
         }, 300);
     },
      jumpToImage: function(index) {
@@ -171,14 +141,8 @@ const ImageModal = {
     displayCurrent: function() {
         if (!this.zoomedImage || !this.spinner || !this.caption || !this.prevButton || !this.nextButton || !this.miniMapContainer) return;
 
-        this.spinner.style.display = 'block';
-        this.zoomedImage.style.display = 'none'; 
-        this.zoomedImage.style.opacity = 0;      
-        this.caption.style.opacity = 0;
-        this.prevButton.style.opacity = 0;
-        this.nextButton.style.opacity = 0;
-        this.miniMapContainer.style.opacity = 0;
-
+        this.spinner.style.display = 'flex';
+        this.zoomedImage.style.opacity = 0;
 
         if (this.currentGalleryImages.length > 0 && this.currentImageIndex >= 0 && this.currentImageIndex < this.currentGalleryImages.length) {
             const imageUrl = this.currentGalleryImages[this.currentImageIndex];
@@ -187,74 +151,64 @@ const ImageModal = {
             const tempImg = new Image();
             tempImg.onload = () => {
                  this.spinner.style.display = 'none';
-                 this.zoomedImage.src = tempImg.src; 
-                 this.zoomedImage.style.display = 'block';
+                 this.zoomedImage.src = tempImg.src;
                  this.updateMiniMapActiveState();
                  setTimeout(() => {
                      this.zoomedImage.style.opacity = 1;
                      this.caption.textContent = `${this.currentDrugTitle ? escapeHtml(this.currentDrugTitle) + ' - ' : ''}${this.currentImageIndex + 1} از ${this.currentGalleryImages.length}`;
-                     this.caption.style.display = 'block';
-                     this.caption.style.opacity = 1;
+
                       if (this.currentGalleryImages.length > 1) {
-                           this.prevButton.style.display = 'flex'; this.prevButton.style.opacity = 1;
-                           this.nextButton.style.display = 'flex'; this.nextButton.style.opacity = 1;
+                           this.prevButton.classList.remove('hidden');
+                           this.nextButton.classList.remove('hidden');
                       } else {
-                           this.prevButton.style.display = 'none';
-                           this.nextButton.style.display = 'none';
+                           this.prevButton.classList.add('hidden');
+                           this.nextButton.classList.add('hidden');
                       }
-                      if (this.miniMapContainer && this.currentMiniMapThumbnails.length > 0) {
-                           this.miniMapContainer.style.display = 'block';
-                          setTimeout(() => { this.miniMapContainer.style.opacity = 1; }, 50);
+                      if (this.miniMapContainer && this.currentMiniMapThumbnails.length > 1) {
+                           this.miniMapContainer.classList.remove('hidden');
+                      } else {
+                           this.miniMapContainer.classList.add('hidden');
                       }
-                 }, 20); 
+                 }, 50);
             };
             tempImg.onerror = () => {
                  this.spinner.style.display = 'none';
-                 this.zoomedImage.style.display = 'none';
                  this.caption.textContent = 'خطا در بارگذاری عکس';
-                 this.caption.style.display = 'block';
-                 this.caption.style.opacity = 1;
-                 this.prevButton.style.display = 'none';
-                 this.nextButton.style.display = 'none';
-                 this.miniMapContainer.style.display = 'none';
                  console.error('Failed to load image:', imageUrl);
             };
             tempImg.src = imageUrl;
         } else {
-            this.zoomedImage.src = ''; this.zoomedImage.alt = ''; this.zoomedImage.style.display = 'none';
-            this.caption.textContent = 'عکسی یافت نشد.'; this.caption.style.display = 'block'; this.caption.style.opacity = 1;
-            this.prevButton.style.display = 'none';
-            this.nextButton.style.display = 'none';
             this.spinner.style.display = 'none';
-            this.miniMapContainer.style.display = 'none';
+            this.caption.textContent = 'عکسی یافت نشد.';
         }
     },
      renderMiniMap: function() {
          if (!this.miniMapContainer || !this.currentMiniMapThumbnails) return;
          this.miniMapContainer.innerHTML = '';
-         if (this.currentMiniMapThumbnails.length > 0) {
+         if (this.currentMiniMapThumbnails.length > 1) {
               this.currentMiniMapThumbnails.forEach((thumbUrl, index) => {
                    const thumbImg = document.createElement('img');
                    thumbImg.src = thumbUrl;
-                   thumbImg.alt = `نمای کوچک ${index + 1} از ${escapeHtml(this.currentDrugTitle)}`;
+                   thumbImg.alt = `نمای کوچک ${index + 1}`;
                    thumbImg.setAttribute('data-index', index);
                    thumbImg.loading = 'lazy';
+                   thumbImg.className = 'inline-block h-16 w-16 object-cover mr-2 cursor-pointer border-2 border-transparent hover:border-blue-500 rounded-md';
                    this.miniMapContainer.appendChild(thumbImg);
               });
-         } else {
-              this.miniMapContainer.style.display = 'none';
+              this.miniMapContainer.addEventListener('click', this.handleMiniMapClick.bind(this));
          }
      },
      updateMiniMapActiveState: function() {
          if (!this.miniMapContainer) return;
          const thumbnails = this.miniMapContainer.querySelectorAll('img');
-         if (thumbnails.length === 0) return;
          thumbnails.forEach((thumb, index) => {
              if (index === this.currentImageIndex) {
-                  thumb.classList.add('active');
+                  thumb.classList.add('border-blue-500');
+                  thumb.classList.remove('border-transparent');
                   thumb.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
              } else {
-                  thumb.classList.remove('active');
+                  thumb.classList.remove('border-blue-500');
+                  thumb.classList.add('border-transparent');
              }
          });
      },
@@ -271,9 +225,9 @@ const ImageModal = {
 };
 
 const SearchApp = {
-    searchForm: null, termInput: null, resultDiv: null, mainLoadingSpinner: null,
-    initialMessage: null, corsWarning: null, clearInputButton: null,
-    searchHistoryDiv: null, searchHistoryListUl: null, statusIndicator: null,
+    searchForm: null, termInput: null, resultDiv: null,
+    initialMessage: null, clearInputButton: null,
+    searchHistoryDiv: null, searchHistoryListUl: null,
     ownerFilterSelect: null, sortSelect: null,
     currentSortKey: 'none', currentSortDirection: 'asc',
     currentFilterKey: 'owner', currentFilterValue: 'all',
@@ -282,11 +236,10 @@ const SearchApp = {
     LOCAL_STORAGE_SORT_KEY: 'drugSearchSortKey',
     LOCAL_STORAGE_SORT_DIR_KEY: 'drugSearchSortDir',
     LOCAL_STORAGE_FILTER_VAL_KEY: 'drugSearchFilterVal',
-    // LOCAL_STORAGE_THEME_KEY defined globally below
     targetBaseUrl: 'https://irc.fda.gov.ir', searchEndpoint: '/nfi/Search',
 
     init: function() {
-        this.searchForm = document.querySelector('#subscribe .subscribe-inputs1 form');
+        this.searchForm = document.querySelector('#subscribe form');
         this.termInput = document.getElementById('Term');
         this.resultDiv = document.getElementById('simulationResult');
         this.initialMessage = document.getElementById('initialMessage');
@@ -294,7 +247,7 @@ const SearchApp = {
         this.searchHistoryDiv = document.getElementById('searchHistory');
         this.searchHistoryListUl = document.getElementById('searchHistoryList');
 
-        this.loadUserPreferences(); 
+        this.loadUserPreferences();
 
         ImageModal.init();
         this.attachEventListeners();
@@ -326,85 +279,59 @@ const SearchApp = {
     },
 
     loadUserPreferences: function() {
-        const savedSortKey = localStorage.getItem(this.LOCAL_STORAGE_SORT_KEY);
-        const savedSortDir = localStorage.getItem(this.LOCAL_STORAGE_SORT_DIR_KEY);
-        const savedFilterVal = localStorage.getItem(this.LOCAL_STORAGE_FILTER_VAL_KEY);
-
-        if (savedSortKey) {
-            this.currentSortKey = savedSortKey;
-        }
-        if (savedSortDir) {
-            this.currentSortDirection = savedSortDir;
-        }
-        if (savedFilterVal) {
-            this.currentFilterValue = savedFilterVal;
-        }
+        this.currentSortKey = localStorage.getItem(this.LOCAL_STORAGE_SORT_KEY) || 'none';
+        this.currentSortDirection = localStorage.getItem(this.LOCAL_STORAGE_SORT_DIR_KEY) || 'asc';
+        this.currentFilterValue = localStorage.getItem(this.LOCAL_STORAGE_FILTER_VAL_KEY) || 'all';
     },
 
      showInitialMessages: function() {
-          if (this.initialMessage) this.initialMessage.style.display = 'block';
-          if (this.mainLoadingSpinner && this.mainLoadingSpinner.parentElement === this.resultDiv) {
-               this.mainLoadingSpinner.parentElement.remove();
-           }
-          this.resultDiv.classList.remove('loading-container', 'error');
-          const statusIndicator = this.resultDiv.querySelector('#currentStatusIndicator');
-          if(statusIndicator) statusIndicator.style.display = 'none';
+          if (this.initialMessage) this.initialMessage.classList.remove('hidden');
+          this.resultDiv.innerHTML = ''; // Clear any previous results or spinners
+          this.resultDiv.appendChild(this.initialMessage);
      },
      handlePopstate: function(event) {
          const urlParams = getQueryParams(window.location.search);
          const poppedTerm = urlParams['Term'] || '';
          const poppedPage = urlParams['PageNumber'] ? parseInt(urlParams['PageNumber']) : 1;
-         const currentTerm = this.termInput ? this.termInput.value.trim() : '';
-         const currentPage = getQueryParams(window.location.search)['PageNumber'] || 1;
-
-         if (poppedTerm !== currentTerm || poppedPage !== parseInt(currentPage)) {
-             if (this.termInput) this.termInput.value = poppedTerm;
-             this.handleInputDirection();
-             this.handleClearButtonVisibility();
-             this.loadUserPreferences(); 
-             if (poppedTerm) {
-                this.performSearch(poppedTerm, poppedPage);
-             } else {
-                this.resultDiv.innerHTML = '';
-                this.showInitialMessages();
-             }
-         } else if (!poppedTerm && currentTerm) {
-             if (this.termInput) this.termInput.value = '';
-             this.resultDiv.innerHTML = '';
-             this.showInitialMessages();
+         if (this.termInput) this.termInput.value = poppedTerm;
+         this.handleInputDirection();
+         this.handleClearButtonVisibility();
+         this.loadUserPreferences();
+         if (poppedTerm) {
+            this.performSearch(poppedTerm, poppedPage);
+         } else {
+            this.resultDiv.innerHTML = '';
+            this.showInitialMessages();
          }
      },
     handleInputDirection: function() {
         if (!this.termInput) return;
         const value = this.termInput.value;
         const rtlRegex = /[\u0600-\u06FF]/;
-        const inputContainer = this.termInput.parentElement;
         if (rtlRegex.test(value) || value === '') {
-            this.termInput.style.direction = 'rtl';
-            this.termInput.style.textAlign = 'right';
-            if (inputContainer) inputContainer.setAttribute('dir', 'rtl');
+            this.termInput.dir = 'rtl';
         } else {
-            this.termInput.style.direction = 'ltr';
-            this.termInput.style.textAlign = 'left';
-            if (inputContainer) inputContainer.setAttribute('dir', 'ltr');
+            this.termInput.dir = 'ltr';
         }
     },
      handleClearButtonVisibility: function() {
          if (!this.termInput || !this.clearInputButton) return;
-         this.clearInputButton.style.display = this.termInput.value.length > 0 ? 'block' : 'none';
+         if (this.termInput.value.length > 0) {
+            this.clearInputButton.classList.remove('hidden');
+         } else {
+            this.clearInputButton.classList.add('hidden');
+         }
      },
      handleClearInputClick: function(event) {
          if(event) event.preventDefault();
          if (!this.termInput) return;
          this.termInput.value = '';
-         const inputEvent = new Event('input', { bubbles: true });
-         this.termInput.dispatchEvent(inputEvent);
+         this.termInput.dispatchEvent(new Event('input', { bubbles: true }));
          this.termInput.focus();
-         this.resultDiv.innerHTML = '';
          this.showInitialMessages();
          history.pushState({}, '', window.location.pathname);
          this.currentSortKey = 'none'; this.currentSortDirection = 'asc';
-         this.currentFilterKey = 'owner'; this.currentFilterValue = 'all';
+         this.currentFilterValue = 'all';
          localStorage.removeItem(this.LOCAL_STORAGE_SORT_KEY);
          localStorage.removeItem(this.LOCAL_STORAGE_SORT_DIR_KEY);
          localStorage.removeItem(this.LOCAL_STORAGE_FILTER_VAL_KEY);
@@ -412,31 +339,27 @@ const SearchApp = {
      },
     attachEventListeners: function() {
          if (this.searchForm) this.searchForm.addEventListener('submit', this.handleSearchSubmit.bind(this));
-         if (this.resultDiv) this.resultDiv.addEventListener('click', this.handleResultAreaClick.bind(this));
-         if (this.searchHistoryListUl) this.searchHistoryListUl.addEventListener('click', this.handleHistoryItemClick.bind(this));
          if (this.resultDiv) {
+            this.resultDiv.addEventListener('click', this.handleResultAreaClick.bind(this));
             this.resultDiv.addEventListener('change', (event) => {
-                if (event.target.closest('.sort-controls select')) {
+                if (event.target.id === 'sortSelect') {
                     this.handleSortChange(event);
-                } else if (event.target.closest('.filter-controls select')) {
+                } else if (event.target.id === 'ownerFilter') {
                     this.handleFilterChange(event);
                 }
             });
          }
+         if (this.searchHistoryListUl) this.searchHistoryListUl.addEventListener('click', this.handleHistoryItemClick.bind(this));
     },
      handleSearchSubmit: function(event) {
         event.preventDefault();
         const searchTerm = this.termInput ? this.termInput.value.trim() : '';
         if (!searchTerm) {
-             if (this.resultDiv) {
-                 this.resultDiv.innerHTML = '';
-                 this.resultDiv.className = 'error';
-                 this.resultDiv.innerHTML = `<div role="alert"><p style="color: red; text-align: center;">لطفاً کلمه کلیدی برای جستجو وارد نمایید!</p></div>`;
-             }
+            this.resultDiv.innerHTML = `<div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 text-center" role="alert"><p class="font-bold">لطفاً کلمه کلیدی برای جستجو وارد نمایید!</p></div>`;
             return;
         }
          this.currentSortKey = 'none'; this.currentSortDirection = 'asc';
-         this.currentFilterKey = 'owner'; this.currentFilterValue = 'all';
+         this.currentFilterValue = 'all';
          localStorage.removeItem(this.LOCAL_STORAGE_SORT_KEY);
          localStorage.removeItem(this.LOCAL_STORAGE_SORT_DIR_KEY);
          localStorage.removeItem(this.LOCAL_STORAGE_FILTER_VAL_KEY);
@@ -445,10 +368,9 @@ const SearchApp = {
          this.saveSearchTermToHistory(searchTerm);
      },
      handleResultAreaClick: async function(event) {
-         const clickedImageContainer = event.target.closest('.drug-card .card-image');
-         const clickedSuggestionLink = event.target.closest('.suggestions-list a');
-         const clickedExpandButton = event.target.closest('.expand-details-button');
-         const clickedCopyButton = event.target.closest('.copy-button');
+        const clickedImageContainer = event.target.closest('.drug-image-container');
+        const clickedSuggestionLink = event.target.closest('.suggestions-list a');
+        const clickedCopyButton = event.target.closest('.copy-button');
 
          if (clickedImageContainer) {
             event.preventDefault();
@@ -460,70 +382,37 @@ const SearchApp = {
              const suggestedTerm = clickedSuggestionLink.getAttribute('data-suggested-term');
              if (suggestedTerm && this.termInput) {
                  this.termInput.value = suggestedTerm;
-                 this.handleInputDirection(); 
-                 this.handleClearButtonVisibility(); 
+                 this.handleInputDirection();
+                 this.handleClearButtonVisibility();
                  this.performSearch(suggestedTerm);
              }
-         } else if (clickedExpandButton) {
-              const detailsSection = clickedExpandButton.previousElementSibling;
-               if (detailsSection && detailsSection.classList.contains('other-details')) {
-                    const isExpanded = detailsSection.classList.toggle('expanded');
-                    clickedExpandButton.classList.toggle('expanded');
-                    clickedExpandButton.setAttribute('aria-expanded', isExpanded);
-               }
          } else if (clickedCopyButton) {
              const targetSelector = clickedCopyButton.getAttribute('data-copy-target');
-              const textToCopyElement = clickedCopyButton.closest('.detail-row')?.querySelector(targetSelector);
+              const textToCopyElement = document.querySelector(targetSelector);
                if (textToCopyElement) {
                     const textToCopy = textToCopyElement.textContent.trim();
-                    copyTextToClipboard(textToCopy);
-                    clickedCopyButton.classList.add('copied', 'icon-copied');
-                     setTimeout(() => {
-                         clickedCopyButton.classList.remove('copied', 'icon-copied');
-                     }, 1500);
+                    copyTextToClipboard(textToCopy, clickedCopyButton);
                }
          }
     },
     handleSortChange: function(event) {
-         const changedSelect = event.target.closest('.sort-controls select');
-          if (changedSelect) {
-              const selectedValue = changedSelect.value;
-              const [sortKey, sortDirection] = selectedValue.split('-');
-               this.currentSortKey = sortKey;
-               this.currentSortDirection = sortDirection || 'asc';
+        const [sortKey, sortDirection] = event.target.value.split('-');
+        this.currentSortKey = sortKey;
+        this.currentSortDirection = sortDirection || 'asc';
 
-               localStorage.setItem(this.LOCAL_STORAGE_SORT_KEY, this.currentSortKey);
-               localStorage.setItem(this.LOCAL_STORAGE_SORT_DIR_KEY, this.currentSortDirection);
+        localStorage.setItem(this.LOCAL_STORAGE_SORT_KEY, this.currentSortKey);
+        localStorage.setItem(this.LOCAL_STORAGE_SORT_DIR_KEY, this.currentSortDirection);
 
-               if (this.currentSortKey !== 'none') {
-                   this.sortResults(this.currentSortKey, this.currentSortDirection);
-               } else {
-                   this.filterResults(this.currentFilterKey, this.currentFilterValue);
-               }
-               this.updateStatusIndicator();
-          }
+        this.applySortingAndFiltering();
     },
     handleFilterChange: function(event) {
-         const changedSelect = event.target.closest('.filter-controls select');
-          if (changedSelect) {
-              const filterKey = changedSelect.getAttribute('data-filter-key');
-              const filterValue = changedSelect.value;
-               if (filterKey) {
-                    this.currentFilterKey = filterKey; 
-                    this.currentFilterValue = filterValue;
-
-                    localStorage.setItem(this.LOCAL_STORAGE_FILTER_VAL_KEY, this.currentFilterValue);
-                    
-                    this.filterResults(filterKey, filterValue);
-                     if (this.currentSortKey !== 'none') {
-                         this.sortResults(this.currentSortKey, this.currentSortDirection);
-                     }
-                    this.updateStatusIndicator();
-               }
-          }
+        this.currentFilterKey = 'owner';
+        this.currentFilterValue = event.target.value;
+        localStorage.setItem(this.LOCAL_STORAGE_FILTER_VAL_KEY, this.currentFilterValue);
+        this.applySortingAndFiltering();
     },
      handleHistoryItemClick: function(event) {
-         const clickedLink = event.target.closest('.search-history li a');
+         const clickedLink = event.target.closest('a');
          if (clickedLink) {
              event.preventDefault();
              const searchTerm = clickedLink.getAttribute('data-term');
@@ -532,7 +421,7 @@ const SearchApp = {
                  this.handleInputDirection();
                  this.handleClearButtonVisibility();
                  this.currentSortKey = 'none'; this.currentSortDirection = 'asc';
-                 this.currentFilterKey = 'owner'; this.currentFilterValue = 'all';
+                 this.currentFilterValue = 'all';
                  localStorage.removeItem(this.LOCAL_STORAGE_SORT_KEY);
                  localStorage.removeItem(this.LOCAL_STORAGE_SORT_DIR_KEY);
                  localStorage.removeItem(this.LOCAL_STORAGE_FILTER_VAL_KEY);
@@ -552,13 +441,9 @@ const SearchApp = {
           let history = JSON.parse(localStorage.getItem(this.LOCAL_STORAGE_HISTORY_KEY)) || [];
           history = history.filter(item => item.toLowerCase() !== term.toLowerCase());
           history.unshift(term);
-          if (history.length > this.MAX_HISTORY_ITEMS) {
-              history = history.slice(0, this.MAX_HISTORY_ITEMS);
-          }
-          try {
-              localStorage.setItem(this.LOCAL_STORAGE_HISTORY_KEY, JSON.stringify(history));
-              this.renderSearchHistory(history);
-          } catch (e) { console.error("Error saving history:", e); }
+          history = history.slice(0, this.MAX_HISTORY_ITEMS);
+          localStorage.setItem(this.LOCAL_STORAGE_HISTORY_KEY, JSON.stringify(history));
+          this.renderSearchHistory(history);
      },
      renderSearchHistory: function(history) {
          if (!this.searchHistoryDiv || !this.searchHistoryListUl) return;
@@ -566,148 +451,80 @@ const SearchApp = {
          if (history && history.length > 0) {
              history.forEach(term => {
                  const li = document.createElement('li');
-                 const a = document.createElement('a');
-                 a.href = '#';
-                 a.textContent = escapeHtml(term);
-                 a.setAttribute('data-term', term);
-                 li.appendChild(a);
+                 li.innerHTML = `<a href="#" data-term="${escapeHtml(term)}" class="block bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium py-1 px-3 rounded-full text-sm transition-colors">${escapeHtml(term)}</a>`;
                  this.searchHistoryListUl.appendChild(li);
              });
-             this.searchHistoryDiv.style.display = 'block';
+             this.searchHistoryDiv.classList.remove('hidden');
          } else {
-             this.searchHistoryDiv.style.display = 'none';
+             this.searchHistoryDiv.classList.add('hidden');
          }
      },
      fetchAndShowImageModal: async function(detailUrl, drugTitle) {
-         if (!ImageModal.imageOverlay || !ImageModal.imageModal || !ImageModal.spinner) return;
-         ImageModal.spinner.style.display = 'block';
-         ImageModal.show([],[], drugTitle); 
-         if (ImageModal.caption) ImageModal.caption.style.display = 'none';
-         if (ImageModal.prevButton) ImageModal.prevButton.style.display = 'none';
-         if (ImageModal.nextButton) ImageModal.nextButton.style.display = 'none';
-         if (ImageModal.zoomedImage) ImageModal.zoomedImage.style.display = 'none';
-         if (ImageModal.miniMapContainer) ImageModal.miniMapContainer.style.display = 'none';
-
+         ImageModal.show([],[], drugTitle);
          try {
              const detailResponse = await fetch(detailUrl);
+             if (!detailResponse.ok) throw new Error(`HTTP error ${detailResponse.status}.`);
              const detailHtmlString = await detailResponse.text();
-             if (!detailResponse.ok) {
-                   throw new Error(`HTTP error ${detailResponse.status}.`);
-             }
              const parser = new DOMParser();
              const detailDoc = parser.parseFromString(detailHtmlString, 'text/html');
-             
              const galleryLinkElements = detailDoc.querySelectorAll('.searchBox1 a[data-lightbox="image-1"], .alignBtn a[data-lightbox="image-1"]');
+             let tempImageUrls = [], tempThumbnailUrls = [];
 
-             let tempImageUrls = [];
-             let tempThumbnailUrls = [];
-
-             galleryLinkElements.forEach((linkElement, idx) => {
-                 const rawFullHref = linkElement.getAttribute('href');
-                 
+             galleryLinkElements.forEach(link => {
+                 const rawFullHref = link.getAttribute('href');
                  if (rawFullHref && rawFullHref.trim() !== '' && rawFullHref.trim() !== '#') {
-                    let absoluteFullHref = rawFullHref.startsWith('/') ? 
-                                           `${this.targetBaseUrl}${rawFullHref}` : 
-                                           rawFullHref;
-                    
-                    if (absoluteFullHref === this.targetBaseUrl || 
-                        absoluteFullHref === (this.targetBaseUrl + '/') ||
-                        absoluteFullHref.endsWith('/#')
-                        ) {
-                        return; 
-                    }
-
+                    let absoluteFullHref = rawFullHref.startsWith('/') ? `${this.targetBaseUrl}${rawFullHref}` : rawFullHref;
                     tempImageUrls.push(absoluteFullHref);
-
-                    const thumbImg = linkElement.querySelector('img');
+                    const thumbImg = link.querySelector('img');
                     const rawThumbSrc = thumbImg ? thumbImg.getAttribute('src') : null;
-
-                    if (rawThumbSrc && rawThumbSrc.trim() !== '' && rawThumbSrc.trim() !== '#') {
-                        let absoluteThumbSrc = rawThumbSrc.startsWith('/') ? 
-                                               `${this.targetBaseUrl}${rawThumbSrc}` : 
-                                               rawThumbSrc;
-                        tempThumbnailUrls.push(absoluteThumbSrc);
-                    } else {
-                        tempThumbnailUrls.push(absoluteFullHref); 
-                    }
+                    let absoluteThumbSrc = rawThumbSrc && rawThumbSrc.startsWith('/') ? `${this.targetBaseUrl}${rawThumbSrc}` : rawThumbSrc || absoluteFullHref;
+                    tempThumbnailUrls.push(absoluteThumbSrc);
                  }
              });
 
-             let finalImageUrls = [];
-             let finalThumbnailUrls = [];
-
-             if (tempImageUrls.length > 1) {
-                 finalImageUrls = tempImageUrls.slice(0, -1);
-                 if (tempThumbnailUrls.length === tempImageUrls.length) { 
-                     finalThumbnailUrls = tempThumbnailUrls.slice(0, -1);
-                 } else if (tempThumbnailUrls.length > 1) {  
-                     finalThumbnailUrls = tempThumbnailUrls.slice(0, -1);
-                     console.warn("Thumbnail/image URL array lengths mismatched. Sliced thumbnails independently.");
-                 } else {  
-                     finalThumbnailUrls = finalImageUrls; 
-                     console.warn("Thumbnail/image URL array lengths mismatched significantly or not enough thumbnails. Using (sliced) full image URLs for thumbnails.");
-                 }
-             } else {
-                 finalImageUrls = tempImageUrls;
-                 finalThumbnailUrls = tempThumbnailUrls;
-             }
+             // The last image is often a duplicate "show all" link, remove it.
+             const finalImageUrls = tempImageUrls.length > 1 ? tempImageUrls.slice(0, -1) : tempImageUrls;
+             const finalThumbnailUrls = tempThumbnailUrls.length > 1 ? tempThumbnailUrls.slice(0, -1) : tempThumbnailUrls;
 
              if (finalImageUrls.length > 0) {
                   ImageModal.show(finalImageUrls, finalThumbnailUrls, drugTitle, 0);
              } else {
-                  if (ImageModal.spinner) ImageModal.spinner.style.display = 'none';
-                  if (ImageModal.caption) {
-                     ImageModal.caption.textContent = 'عکسی در صفحه جزئیات یافت نشد.';
-                     ImageModal.caption.style.display = 'block';
-                     ImageModal.caption.style.opacity = 1;
-                 }
-                 ImageModal.currentGalleryImages = []; ImageModal.currentMiniMapThumbnails = []; ImageModal.currentImageIndex = 0;
+                  ImageModal.displayCurrent(); // Will show "not found" message
              }
-
          } catch (detailError) {
              console.error('Error fetching detail page for images:', detailError);
-              if (ImageModal.spinner) ImageModal.spinner.style.display = 'none';
-             if (ImageModal.caption) {
-                 ImageModal.caption.textContent = `خطا: ${detailError.message}`;
-                 ImageModal.caption.style.display = 'block';
-                 ImageModal.caption.style.opacity = 1;
-             }
-             ImageModal.currentGalleryImages = []; ImageModal.currentMiniMapThumbnails = []; ImageModal.currentImageIndex = 0;
+             ImageModal.caption.textContent = `خطا در بارگذاری تصاویر: ${detailError.message}`;
+             ImageModal.spinner.style.display = 'none';
          }
      },
     performSearch: async function(searchTerm, pageNumber = 1, pageSize = 10) {
-         if (!this.resultDiv) return;
-         this.resultDiv.innerHTML = '';
-         const mainSpinnerContainer = document.createElement('div');
-         mainSpinnerContainer.className = 'loading-container';
-         mainSpinnerContainer.setAttribute('role', 'status');
-         const mainSpinnerElement = document.createElement('div');
-         mainSpinnerElement.className = 'spinner';
-         const loadingMessage = document.createElement('p');
-         loadingMessage.textContent = `در حال جستجو برای "${escapeHtml(searchTerm)}" صفحه ${pageNumber}...`;
-         mainSpinnerContainer.appendChild(mainSpinnerElement);
-         mainSpinnerContainer.appendChild(loadingMessage);
-         this.resultDiv.appendChild(mainSpinnerContainer);
-         this.mainLoadingSpinner = mainSpinnerElement;
+         if (!this.resultDiv || !this.termInput) return;
+         if(this.initialMessage) this.initialMessage.classList.add('hidden');
+         this.resultDiv.innerHTML = `
+            <div class="flex flex-col items-center justify-center p-10">
+                <div class="spinner animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+                <p class="text-gray-600 dark:text-gray-400">در حال جستجو برای "${escapeHtml(searchTerm)}" صفحه ${pageNumber}...</p>
+            </div>`;
 
         const encodedSearchTerm = encodeURIComponent(searchTerm);
         const targetUrl = `${this.targetBaseUrl}${this.searchEndpoint}?Term=${encodedSearchTerm}&PageNumber=${pageNumber}&PageSize=${pageSize}`;
-        const url = new URL(window.location.href);
-        url.searchParams.set('Term', searchTerm);
-        url.searchParams.set('PageNumber', pageNumber);
-        history.pushState({ term: searchTerm, page: pageNumber }, '', url.toString());
+        const currentUrl = new URL(window.location.href);
+        currentUrl.searchParams.set('Term', searchTerm);
+        currentUrl.searchParams.set('PageNumber', pageNumber);
+        history.pushState({ term: searchTerm, page: pageNumber }, '', currentUrl.toString());
 
         try {
             const response = await fetch(targetUrl);
-            const htmlString = await response.text();
             if (!response.ok) throw new Error(`HTTP error ${response.status}.`);
+            const htmlString = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlString, 'text/html');
             const resultItems = doc.querySelectorAll('.RowSearchSty');
-            let paginationElement = doc.querySelector('.pagination');
+            const paginationElement = doc.querySelector('.pagination');
             const noResultsTitleElement = doc.querySelector('.txtSearchTitle1');
             const suggestionLinks = doc.querySelectorAll('.titleNotFind a');
-            this.resultDiv.innerHTML = '';
+
+            this.resultDiv.innerHTML = ''; // Clear spinner
             if (noResultsTitleElement && suggestionLinks.length > 0 && resultItems.length === 0) {
                  this.renderNoResults(noResultsTitleElement, suggestionLinks);
                  this.allResultsOnCurrentPage = [];
@@ -720,40 +537,8 @@ const SearchApp = {
         } catch (error) { this.renderError(error); this.allResultsOnCurrentPage = []; }
     },
      renderResults: function(resultItems, paginationElement) {
-         const owners = new Set();
-         resultItems.forEach(item => {
-             item.querySelectorAll('.searchRow > .row label').forEach(label => {
-                 if (label.textContent.trim().includes('صاحب برند')) {
-                     const valueElement = label.closest('.col-lg-4, .col-md-4, .col-sm-6, .col-xs-12')?.querySelector('span.txtSearch1, span.priceTxt, bdo, span.txtAlignLTR');
-                     if (valueElement) owners.add(valueElement.textContent.trim());
-                 }
-             });
-         });
-         const sortedOwners = Array.from(owners).sort((a,b) => a.localeCompare(b, 'fa'));
-         let resultsHtml = `<h3 style="color: #1f3a65; margin-bottom: 20px; text-align: right; font-size: 1.4rem;">نتایج جستجو:</h3>
-             <div class="sort-controls">
-                 <label for="sortSelect">مرتب‌سازی:</label>
-                 <select id="sortSelect" aria-label="گزینه مرتب سازی نتایج">
-                      <option value="none">مرتبط‌ترین</option>
-                      <option value="price-asc">قیمت (کم به زیاد)</option>
-                      <option value="price-desc">قیمت (زیاد به کم)</option>
-                      <option value="persian-title-asc">نام فارسی (الفبا)</option>
-                      <option value="english-title-asc">نام انگلیسی (الفبا)</option>
-                 </select>
-             </div>
-             <div class="filter-controls">
-                  <div class="filter-group">
-                     <label for="ownerFilter">صاحب برند:</label>
-                     <select id="ownerFilter" data-filter-key="owner" aria-label="فیلتر بر اساس صاحب برند">
-                         <option value="all">همه</option>
-                         ${sortedOwners.map(owner => `<option value="${escapeHtml(owner)}">${escapeHtml(owner)}</option>`).join('')}
-                     </select>
-                  </div>
-             </div>
-            <div id="currentStatusIndicator" aria-live="polite" style="display: none;"></div>
-            <ul id="resultsList" class="results-list">`;
-
-        resultItems.forEach((item, index) => { 
+        const owners = new Set();
+        const resultsData = Array.from(resultItems).map((item, index) => {
             const persianLinkElement = item.querySelector('.titleSearch-Link-RtlAlter a');
             const englishLinkElement = item.querySelector('.titleSearch-Link-ltrAlter a');
             const persianTitle = persianLinkElement ? persianLinkElement.textContent.trim() : 'N/A';
@@ -762,46 +547,88 @@ const SearchApp = {
             const absoluteDetailLink = detailLink && detailLink !== '#' && !detailLink.startsWith('http') ? `${this.targetBaseUrl}${detailLink}` : detailLink;
             const imageElement = item.querySelector('.BoxImgSearch img');
             const imageUrl = imageElement ? `${this.targetBaseUrl}${imageElement.getAttribute('src')}` : '';
+
             let details = {}, rawPrice = '0', ownerName = '';
             item.querySelectorAll('.searchRow > .row label').forEach(label => {
                  const labelText = label.textContent.trim();
                  const valueElement = label.closest('.col-lg-4, .col-md-4, .col-sm-6, .col-xs-12')?.querySelector('span.txtSearch1, span.priceTxt, bdo, span.txtAlignLTR');
                  if (valueElement) {
                      const valueText = valueElement.textContent.trim();
-                     if (labelText.includes('صاحب برند')) { details.brandOwner = valueText; ownerName = valueText;}
+                     if (labelText.includes('صاحب برند')) { details.brandOwner = valueText; ownerName = valueText; owners.add(ownerName); }
                      else if (labelText.includes('صاحب پروانه')) details.licenseHolder = valueText;
-                     else if (labelText.includes('قیمت هر بسته')) { rawPrice = valueText; details.price = addCommas(valueText);}
+                     else if (labelText.includes('قیمت هر بسته')) { rawPrice = valueText; details.price = addCommas(valueText); }
                      else if (labelText.includes('بسته بندی')) details.packaging = valueText;
                      else if (labelText.includes('کد فرآورده')) details.productCode = valueText;
                      else if (labelText.includes('کد ژنریک')) details.genericCode = valueText;
                  }
             });
-            const uniqueIdBase = `item_${index}_${Date.now()}`; 
+            return { index, persianTitle, englishTitle, absoluteDetailLink, imageUrl, details, rawPrice, ownerName };
+        });
 
-            resultsHtml += `
-                <li class="result-item">
-                    <div class="drug-card" data-raw-price="${rawPrice}" data-owner="${escapeHtml(ownerName)}">
-                        ${imageUrl ? `<div class="card-image" data-detail-url="${absoluteDetailLink}" data-drug-title="${escapeHtml(persianTitle)}"><img src="${imageUrl}" alt="تصویر ${escapeHtml(persianTitle)}" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23e0e0e0\\'/%3E%3Ctext x=\\'50\\' y=\\'60\\' font-size=\\'40\\' text-anchor=\\'middle\\' fill=\\'%23999\\'%3E?%3C/text%3E%3C/svg%3E'; this.style.objectFit='contain';" /></div>` : ''}
-                        <div class="card-content">
-                            <h3>${this.highlightSearchTerm(escapeHtml(persianTitle), this.termInput ? this.termInput.value : '')}</h3>
-                            <p class="english-title" dir="ltr">${this.highlightSearchTerm(escapeHtml(englishTitle), this.termInput ? this.termInput.value : '')}</p>
-                            <div class="main-details">${details.price ? `<div class="price-group"><span class="price-label">قیمت:</span><span class="price" dir="ltr">${details.price}</span><span class="price-unit">ریال</span></div>` : ''}</div>
-                            <div class="other-details">
-                                 ${ownerName ? `<div class="detail-row"><label>صاحب برند:</label> <span>${escapeHtml(ownerName)}</span></div>` : ''}
-                                 ${details.licenseHolder ? `<div class="detail-row"><label>صاحب پروانه:</label> <span>${escapeHtml(details.licenseHolder)}</span></div>` : ''}
-                                 ${details.packaging ? `<div class="detail-row"><label>بسته بندی:</label> <bdo>${escapeHtml(details.packaging)}</bdo></div>` : ''}
-                                ${details.productCode ? `<div class="detail-row"><label>کد فرآورده:</label> <span class="copy-text" id="prodCode_${uniqueIdBase}">${escapeHtml(details.productCode)}</span> <i class="fas fa-copy copy-button" role="button" tabindex="0" data-copy-target="#prodCode_${uniqueIdBase}" title="کپی کردن کد فرآورده" aria-label="کپی کردن کد فرآورده ${escapeHtml(details.productCode)}"></i></div>` : ''}
-                                ${details.genericCode ? `<div class="detail-row"><label>کد ژنریک:</label> <span class="copy-text" id="genCode_${uniqueIdBase}">${escapeHtml(details.genericCode)}</span> <i class="fas fa-copy copy-button" role="button" tabindex="0" data-copy-target="#genCode_${uniqueIdBase}" title="کپی کردن کد ژنریک" aria-label="کپی کردن کد ژنریک ${escapeHtml(details.genericCode)}"></i></div>` : ''}
+        const sortedOwners = Array.from(owners).sort((a, b) => a.localeCompare(b, 'fa'));
+
+        // Build controls and container HTML
+        let resultsContainerHtml = `
+            <div class="space-y-4">
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md flex flex-col md:flex-row gap-4 items-center">
+                    <div class="flex-1 w-full md:w-auto">
+                        <label for="sortSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">مرتب‌سازی:</label>
+                        <select id="sortSelect" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="none">مرتبط‌ترین</option>
+                            <option value="price-asc">قیمت (کم به زیاد)</option>
+                            <option value="price-desc">قیمت (زیاد به کم)</option>
+                            <option value="persian-title-asc">نام فارسی (الفبا)</option>
+                            <option value="english-title-asc">نام انگلیسی (الفبا)</option>
+                        </select>
+                    </div>
+                    <div class="flex-1 w-full md:w-auto">
+                        <label for="ownerFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">صاحب برند:</label>
+                        <select id="ownerFilter" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="all">همه</option>
+                            ${sortedOwners.map(owner => `<option value="${escapeHtml(owner)}">${escapeHtml(owner)}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div id="currentStatusIndicator" class="text-sm text-gray-600 dark:text-gray-400 p-2 text-center" aria-live="polite"></div>
+                <div id="resultsList" class="space-y-4"></div>
+            </div>`;
+        this.resultDiv.innerHTML = resultsContainerHtml;
+        const resultsListContainer = this.resultDiv.querySelector('#resultsList');
+        resultsData.forEach(data => {
+            const uniqueIdBase = `item_${data.index}_${Date.now()}`;
+            const itemHtml = `
+                <div class="result-item bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-all duration-300" data-raw-price="${data.rawPrice}" data-owner="${escapeHtml(data.ownerName)}" data-persian-title="${escapeHtml(data.persianTitle)}" data-english-title="${escapeHtml(data.englishTitle)}">
+                    <div class="flex flex-col md:flex-row">
+                        ${data.imageUrl ? `
+                        <div class="md:w-1/4 p-4 flex items-center justify-center">
+                            <a href="#" class="drug-image-container cursor-pointer" data-detail-url="${data.absoluteDetailLink}" data-drug-title="${escapeHtml(data.persianTitle)}">
+                                <img src="${data.imageUrl}" alt="تصویر ${escapeHtml(data.persianTitle)}" class="max-h-40 object-contain rounded-md" loading="lazy" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23e0e0e0\\'/%3E%3Ctext x=\\'50\\' y=\\'60\\' font-size=\\'40\\' text-anchor=\\'middle\\' fill=\\'%23999\\'%3E?%3C/text%3E%3C/svg%3E';">
+                            </a>
+                        </div>` : '<div class="md:w-1/4 p-4 flex items-center justify-center"><div class="w-full h-40 bg-gray-100 dark:bg-gray-700 rounded-md flex items-center justify-center text-gray-400">بدون تصویر</div></div>'}
+                        <div class="flex-grow p-4 space-y-3">
+                            <div>
+                                <h3 class="text-xl font-bold text-blue-800 dark:text-blue-300">${this.highlightSearchTerm(escapeHtml(data.persianTitle), this.termInput ? this.termInput.value : '')}</h3>
+                                <p class="text-md text-gray-500 dark:text-gray-400" dir="ltr">${this.highlightSearchTerm(escapeHtml(data.englishTitle), this.termInput ? this.termInput.value : '')}</p>
                             </div>
-                            <button class="expand-details-button" aria-expanded="false"></button>
-                            <a href="${absoluteDetailLink}" target="_blank" class="detail-link" rel="noopener noreferrer">مشاهده جزئیات در سایت اصلی</a>
+                            ${data.details.price ? `<div class="text-lg font-semibold"><span class="text-gray-600 dark:text-gray-300">قیمت:</span> <span class="text-green-600 dark:text-green-400" dir="ltr">${data.details.price}</span> <span class="text-sm">ریال</span></div>` : ''}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                                ${data.details.brandOwner ? `<div><strong class="font-semibold">صاحب برند:</strong> ${escapeHtml(data.details.brandOwner)}</div>` : ''}
+                                ${data.details.licenseHolder ? `<div><strong class="font-semibold">صاحب پروانه:</strong> ${escapeHtml(data.details.licenseHolder)}</div>` : ''}
+                                ${data.details.packaging ? `<div><strong class="font-semibold">بسته بندی:</strong> ${escapeHtml(data.details.packaging)}</div>` : ''}
+                                ${data.details.productCode ? `<div class="flex items-center gap-2"><strong class="font-semibold">کد فرآورده:</strong> <span id="prodCode_${uniqueIdBase}">${escapeHtml(data.details.productCode)}</span> <i class="fas fa-copy copy-button text-gray-400 hover:text-blue-500 cursor-pointer" role="button" tabindex="0" data-copy-target="#prodCode_${uniqueIdBase}" title="کپی"></i></div>` : ''}
+                                ${data.details.genericCode ? `<div class="flex items-center gap-2"><strong class="font-semibold">کد ژنریک:</strong> <span id="genCode_${uniqueIdBase}">${escapeHtml(data.details.genericCode)}</span> <i class="fas fa-copy copy-button text-gray-400 hover:text-blue-500 cursor-pointer" role="button" tabindex="0" data-copy-target="#genCode_${uniqueIdBase}" title="کپی"></i></div>` : ''}
+                            </div>
                         </div>
                     </div>
-                </li>`;
+                     <div class="bg-gray-50 dark:bg-gray-700/50 p-3 text-center">
+                        <a href="${data.absoluteDetailLink}" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline font-semibold" rel="noopener noreferrer">مشاهده جزئیات در سایت اصلی <i class="fas fa-external-link-alt text-xs"></i></a>
+                    </div>
+                </div>`;
+            resultsListContainer.innerHTML += itemHtml;
         });
-        resultsHtml += '</ul>';
+
         if (paginationElement) {
-            resultsHtml += '<div class="pagination-container"><ul class="pagination" role="navigation" aria-label="ناوبری صفحات">';
+            let paginationHtml = '<nav aria-label="ناوبری صفحات"><ul class="flex justify-center items-center gap-1 md:gap-2 mt-6">';
             paginationElement.querySelectorAll('li a').forEach(link => {
                 const originalLinkText = link.textContent;
                 const linkClass = link.parentElement.className;
@@ -809,159 +636,100 @@ const SearchApp = {
                 const hrefParams = getQueryParams(link.getAttribute('href'));
                 const pageNum = hrefParams['PageNumber'] ? parseInt(hrefParams['PageNumber']) : 1;
                 const termForPagination = hrefParams['Term'] || (this.termInput ? this.termInput.value.trim() : '');
+
+                let baseClasses = "px-3 py-2 md:px-4 md:py-2 rounded-md transition-colors text-sm md:text-base";
+                let finalClasses = "";
                 let ariaAttrs = `data-page="${pageNum}" data-term="${escapeHtml(termForPagination)}"`;
-                if (linkClass.includes('active')) ariaAttrs += ` aria-current="page" aria-label="صفحه ${pageNum}, صفحه فعلی"`;
-                else ariaAttrs += ` aria-label="رفتن به صفحه ${pageNum}"`;
-                if (linkClass.includes('disabled')) ariaAttrs += ` aria-disabled="true"`;
 
-                resultsHtml += `<li class="${linkClass}"><a href="#" ${ariaAttrs}>${buttonText}</a></li>`;
+                if (linkClass.includes('active')) {
+                    finalClasses = `${baseClasses} bg-blue-600 text-white font-bold cursor-default`;
+                    ariaAttrs += ` aria-current="page" aria-label="صفحه ${pageNum}, صفحه فعلی"`;
+                } else if (linkClass.includes('disabled')) {
+                    finalClasses = `${baseClasses} bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed`;
+                     ariaAttrs += ` aria-disabled="true"`;
+                } else {
+                    finalClasses = `${baseClasses} bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600`;
+                    ariaAttrs += ` aria-label="رفتن به صفحه ${pageNum}"`;
+                }
+                paginationHtml += `<li><a href="#" class="${finalClasses}" ${ariaAttrs}>${buttonText}</a></li>`;
             });
-           resultsHtml += '</ul></div>';
-        }
-        this.resultDiv.innerHTML = resultsHtml;
+            paginationHtml += '</ul></nav>';
+            resultsListContainer.insertAdjacentHTML('afterend', paginationHtml);
 
-        if (this.resultDiv.querySelector('.pagination')) {
-             this.resultDiv.querySelectorAll('.pagination a:not([aria-disabled="true"])').forEach(link => {
-                  link.addEventListener('click', function(e) {
+            this.resultDiv.querySelectorAll('.pagination a:not([aria-disabled="true"])').forEach(link => {
+                  link.addEventListener('click', e => {
                       e.preventDefault();
-                      const page = this.getAttribute('data-page');
-                      const term = this.getAttribute('data-term');
-                      if (page && term) {
-                          if(SearchApp.termInput) SearchApp.termInput.value = term;
-                           SearchApp.currentSortKey = 'none'; SearchApp.currentSortDirection = 'asc';
-                           SearchApp.currentFilterKey = 'owner'; SearchApp.currentFilterValue = 'all';
-                           localStorage.removeItem(SearchApp.LOCAL_STORAGE_SORT_KEY);
-                           localStorage.removeItem(SearchApp.LOCAL_STORAGE_SORT_DIR_KEY);
-                           localStorage.removeItem(SearchApp.LOCAL_STORAGE_FILTER_VAL_KEY);
-                          SearchApp.performSearch(term, parseInt(page));
-                      }
+                      const page = link.getAttribute('data-page');
+                      const term = link.getAttribute('data-term');
+                      if (page && term) this.performSearch(term, parseInt(page));
                   });
              });
          }
-         this.ownerFilterSelect = this.resultDiv.querySelector('#ownerFilter');
-         this.sortSelect = this.resultDiv.querySelector('#sortSelect');
-         this.statusIndicator = this.resultDiv.querySelector('#currentStatusIndicator');
         
-        if(this.ownerFilterSelect) this.ownerFilterSelect.value = this.currentFilterValue;
-        if(this.sortSelect) {
+         this.sortSelect = this.resultDiv.querySelector('#sortSelect');
+         this.ownerFilterSelect = this.resultDiv.querySelector('#ownerFilter');
+
+         if(this.sortSelect) {
             const sortValue = this.currentSortKey === 'none' ? 'none' : `${this.currentSortKey}-${this.currentSortDirection}`;
             this.sortSelect.value = sortValue;
+         }
+         if(this.ownerFilterSelect) this.ownerFilterSelect.value = this.currentFilterValue;
+
+         this.allResultsOnCurrentPage = Array.from(this.resultDiv.querySelectorAll('.result-item'));
+         this.applySortingAndFiltering();
+     },
+     applySortingAndFiltering: function() {
+        const resultsListUl = this.resultDiv.querySelector('#resultsList');
+        if (!resultsListUl || !this.allResultsOnCurrentPage) return;
+
+        // 1. Filter
+        this.allResultsOnCurrentPage.forEach(item => {
+            const owner = item.getAttribute('data-owner');
+            const shouldShow = (this.currentFilterValue === 'all' || owner === this.currentFilterValue);
+            item.style.display = shouldShow ? 'block' : 'none';
+        });
+
+        // 2. Sort the visible items
+        const visibleItems = this.allResultsOnCurrentPage.filter(item => item.style.display !== 'none');
+        if (this.currentSortKey !== 'none') {
+            visibleItems.sort((a, b) => {
+                let aValue, bValue, comparison = 0;
+                if (this.currentSortKey === 'price') {
+                    aValue = parseFloat(a.getAttribute('data-raw-price').replace(/,/g, '') || '0');
+                    bValue = parseFloat(b.getAttribute('data-raw-price').replace(/,/g, '') || '0');
+                    if (aValue > bValue) comparison = 1; else if (aValue < bValue) comparison = -1;
+                } else { // 'persian-title' or 'english-title'
+                    aValue = a.getAttribute(`data-${this.currentSortKey}`) || '';
+                    bValue = b.getAttribute(`data-${this.currentSortKey}`) || '';
+                    comparison = aValue.localeCompare(bValue, this.currentSortKey === 'persian-title' ? 'fa' : 'en');
+                }
+                return this.currentSortDirection === 'desc' ? comparison * -1 : comparison;
+            });
         }
 
-
-        const resultsListUl = this.resultDiv.querySelector('#resultsList');
-        if(resultsListUl) {
-            this.allResultsOnCurrentPage = Array.from(resultsListUl.querySelectorAll('li.result-item'));
-            this.filterResults(this.currentFilterKey, this.currentFilterValue);
-            if (this.currentSortKey !== 'none') {
-                this.sortResults(this.currentSortKey, this.currentSortDirection);
-            }
-            this.updateStatusIndicator();
-            this.allResultsOnCurrentPage.forEach(item => {
-                const otherDetails = item.querySelector('.other-details');
-                const expandButton = item.querySelector('.expand-details-button');
-                if (otherDetails && expandButton) {
-                    const isCollapsible = otherDetails.scrollHeight > otherDetails.clientHeight + 5; 
-                    otherDetails.classList.toggle('is-collapsible', isCollapsible);
-                    expandButton.style.display = isCollapsible ? 'block' : 'none';
-                    expandButton.setAttribute('aria-expanded', otherDetails.classList.contains('expanded'));
-                }
-            });
-        } else { this.allResultsOnCurrentPage = []; this.updateStatusIndicator(); }
-     },
-     sortResults: function(sortKey, sortDirection) {
-         const resultsListUl = this.resultDiv.querySelector('#resultsList');
-         if (!resultsListUl || !this.allResultsOnCurrentPage || this.allResultsOnCurrentPage.length === 0) return;
-         this.allResultsOnCurrentPage.sort((a, b) => {
-             let aValue, bValue, comparison = 0;
-             if (sortKey === 'price') {
-                 aValue = parseFloat((a.querySelector('.drug-card')?.getAttribute('data-raw-price') || '0').replace(/,/g, ''));
-                 bValue = parseFloat((b.querySelector('.drug-card')?.getAttribute('data-raw-price') || '0').replace(/,/g, ''));
-                 if (isNaN(aValue)) aValue = sortDirection === 'asc' ? Infinity : -Infinity; 
-                 if (isNaN(bValue)) bValue = sortDirection === 'asc' ? Infinity : -Infinity;
-                 if (aValue > bValue) comparison = 1; else if (aValue < bValue) comparison = -1;
-             } else if (sortKey === 'persian-title') {
-                 aValue = a.querySelector('h3')?.textContent.trim() || '';
-                 bValue = b.querySelector('h3')?.textContent.trim() || '';
-                 comparison = aValue.localeCompare(bValue, 'fa', {sensitivity: 'base'});
-             } else if (sortKey === 'english-title') {
-                 aValue = a.querySelector('.english-title')?.textContent.trim() || '';
-                 bValue = b.querySelector('.english-title')?.textContent.trim() || '';
-                 comparison = aValue.localeCompare(bValue, 'en', {sensitivity: 'base'});
-             }
-             return sortDirection === 'desc' ? comparison * -1 : comparison;
-         });
-         const fragment = document.createDocumentFragment();
-         this.allResultsOnCurrentPage.forEach(item => {
-             if (item.style.display !== 'none') fragment.appendChild(item);
-         });
-         resultsListUl.innerHTML = '';
-         resultsListUl.appendChild(fragment);
-     },
-     filterResults: function(filterKey, filterValue) {
-         const resultsListUl = this.resultDiv.querySelector('#resultsList');
-          if (!resultsListUl || !this.allResultsOnCurrentPage || this.allResultsOnCurrentPage.length === 0) {
-             this.updateStatusIndicator(); 
-             return;
-         }
-         const activeFilters = [];
-         if (this.currentFilterKey === 'owner' && this.currentFilterValue !== 'all') {
-             activeFilters.push({ key: 'owner', value: this.currentFilterValue });
-         }
-         this.allResultsOnCurrentPage.forEach(item => {
-             const drugCard = item.querySelector('.drug-card');
-             if (!drugCard) return;
-             let showItem = true;
-             for (const filter of activeFilters) {
-                 const itemValue = drugCard.getAttribute(`data-${filter.key}`);
-                 if (itemValue !== filter.value) { showItem = false; break; }
-             }
-             item.style.display = showItem ? 'list-item' : 'none';
-         });
-          if (this.currentSortKey !== 'none') {
-              this.sortResults(this.currentSortKey, this.currentSortDirection);
-          } else { 
-               const fragment = document.createDocumentFragment();
-                this.allResultsOnCurrentPage.forEach(item => {
-                    if (item.style.display !== 'none') fragment.appendChild(item);
-                });
-                resultsListUl.innerHTML = '';
-                resultsListUl.appendChild(fragment);
-          }
-         this.updateStatusIndicator();
+        // 3. Re-append to DOM in correct order
+        visibleItems.forEach(item => resultsListUl.appendChild(item));
+        this.updateStatusIndicator();
      },
      updateStatusIndicator: function() {
          const indicatorElement = this.resultDiv.querySelector('#currentStatusIndicator');
          if (!indicatorElement) return;
-         let statusText = '';
          const totalItemsOnPage = this.allResultsOnCurrentPage ? this.allResultsOnCurrentPage.length : 0;
-         const visibleItems = this.allResultsOnCurrentPage ? this.allResultsOnCurrentPage.filter(item => item.style.display !== 'none').length : 0;
+         const visibleItemsCount = this.allResultsOnCurrentPage ? this.allResultsOnCurrentPage.filter(item => item.style.display !== 'none').length : 0;
+         let statusText = '';
 
          if (totalItemsOnPage > 0) {
-              statusText += `نمایش ${visibleItems} از ${totalItemsOnPage} نتیجه`;
-         } else if (this.termInput && this.termInput.value) { 
-              statusText += `هیچ نتیجه‌ای برای "${escapeHtml(this.termInput.value)}" یافت نشد.`;
-         } else { 
-             indicatorElement.style.display = 'none';
-             return;
+              statusText += `نمایش ${visibleItemsCount} از ${totalItemsOnPage} نتیجه`;
+         } else if (this.termInput && this.termInput.value) {
+              indicatorElement.style.display = 'none';
+              return;
          }
 
-         if (this.currentSortKey !== 'none' && totalItemsOnPage > 0) {
-             let sortDirText = this.currentSortDirection === 'asc' ? 'صعودی' : 'نزولی';
-             let sortKeyText = '';
-             if (this.currentSortKey === 'price') sortKeyText = 'قیمت';
-             else if (this.currentSortKey === 'persian-title') sortKeyText = 'نام فارسی';
-             else if (this.currentSortKey === 'english-title') sortKeyText = 'نام انگلیسی';
-             statusText += ` | مرتب‌سازی: ${sortKeyText} (${sortDirText})`;
-         }
-         if (this.currentFilterKey === 'owner' && this.currentFilterValue !== 'all' && totalItemsOnPage > 0) {
-              statusText += ` | فیلتر صاحب برند: "${escapeHtml(this.currentFilterValue)}"`;
-         }
-          indicatorElement.textContent = statusText;
-          indicatorElement.style.display = 'block';
+         indicatorElement.textContent = statusText;
+         indicatorElement.style.display = statusText ? 'block' : 'none';
      },
     highlightSearchTerm: function(text, term) {
-        if (!text || !term || term.length < 1) return text; 
+        if (!text || !term || term.length < 1) return text;
         const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`(${escapedTerm})`, 'gi');
         return text.replace(regex, '<span class="highlight">$1</span>');
@@ -969,65 +737,54 @@ const SearchApp = {
      renderNoResults: function(noResultsTitleElement, suggestionLinks) {
          const noResultsMessage = noResultsTitleElement.textContent.trim();
          let resultsHtml = `
-             <div class="no-results-container" role="region" aria-labelledby="noResultsHeading">
-                 <h3 id="noResultsHeading">${escapeHtml(noResultsMessage)}</h3>`;
-         if (suggestionLinks.length > 0) {
-            resultsHtml += `<p>شاید منظور شما یکی از موارد زیر است:</p><ul class="suggestions-list">`;
+             <div class="bg-yellow-100 dark:bg-gray-800 border-t-4 border-yellow-500 rounded-b text-yellow-900 dark:text-yellow-200 px-4 py-3 shadow-md text-center" role="alert">
+                 <div class="py-1">
+                    <p class="font-bold text-lg">${escapeHtml(noResultsMessage)}</p>
+                    ${suggestionLinks.length > 0 ? `<p class="text-sm mt-2">شاید منظور شما یکی از موارد زیر است:</p>` : ''}
+                 </div>
+                 <ul class="suggestions-list flex flex-wrap justify-center gap-2 mt-4">`;
             suggestionLinks.forEach(link => {
                 const suggestedText = link.textContent.trim();
-                const hrefParams = getQueryParams(link.getAttribute('href'));
-                const suggestedTerm = hrefParams['term'] || suggestedText;
-                resultsHtml += `<li><a href="#" data-suggested-term="${escapeHtml(suggestedTerm)}">${escapeHtml(suggestedText)}</a></li>`;
+                const suggestedTerm = getQueryParams(link.getAttribute('href'))['term'] || suggestedText;
+                resultsHtml += `<li><a href="#" data-suggested-term="${escapeHtml(suggestedTerm)}" class="block bg-yellow-200 hover:bg-yellow-300 dark:bg-yellow-800 dark:hover:bg-yellow-700 text-sm font-medium px-3 py-1 rounded-full transition-colors">${escapeHtml(suggestedText)}</a></li>`;
             });
-            resultsHtml += `</ul>`;
-         }
-         resultsHtml += `</div>`;
+            resultsHtml += `</ul></div>`;
          this.resultDiv.innerHTML = resultsHtml;
-         this.resultDiv.className = '';
-         this.updateStatusIndicator();
      },
      renderGenericNoResults: function() {
-         this.resultDiv.innerHTML = `<div class="no-results-container" role="status"><p>نتیجه‌ای برای جستجوی شما یافت نشد.</p></div>`;
-         this.resultDiv.className = '';
-         this.updateStatusIndicator();
+         this.resultDiv.innerHTML = `<div class="bg-gray-100 dark:bg-gray-800 border-t-4 border-gray-500 rounded-b text-gray-900 dark:text-gray-200 px-4 py-3 shadow-md text-center" role="status"><p class="font-bold">نتیجه‌ای برای جستجوی شما یافت نشد.</p></div>`;
      },
      renderError: function(error) {
         console.error('Search failed:', error);
-        let errorMessage = '<p style="color: red;">مشکل در دریافت یا پردازش نتایج جستجو.</p>';
-        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-             errorMessage += '<p>عدم دسترسی به اینترنت یا مشکل در ارتباط با سرور سایت مرجع (احتمالاً CORS).</p>';
-        } else if (error.message.startsWith('HTTP error')) {
-             errorMessage += `<p>خطای سرور: ${error.message}</p>`;
-        } else { errorMessage += `<p>جزئیات: ${escapeHtml(error.message)}</p>`; }
-        this.resultDiv.innerHTML = `<div class="error" role="alert" style="padding: 20px; text-align: right;">${errorMessage}</div>`;
-        this.updateStatusIndicator();
+        let errorMessage = '<strong>خطا در ارتباط با سرور.</strong><p>لطفاً اتصال اینترنت خود را بررسی کرده و دوباره تلاش کنید.</p>';
+        if (error.message.startsWith('HTTP error')) {
+             errorMessage += `<p class="text-xs mt-2 text-red-600">جزئیات: ${error.message}</p>`;
+        }
+        this.resultDiv.innerHTML = `<div class="bg-red-100 border-t-4 border-red-500 rounded-b text-red-900 px-4 py-3 shadow-md" role="alert">${errorMessage}</div>`;
     }
 };
 
 // --- Theme Toggle Functionality ---
 const LOCAL_STORAGE_THEME_KEY = 'drugSearchTheme';
 const themeToggleBtn = document.getElementById('themeToggleBtn');
-// Icons are referenced after DOMContentLoaded to ensure they exist if script is in <head>
-let sunIcon, moonIcon; 
+let sunIcon, moonIcon;
 
 function applyTheme(theme) {
     if (theme === 'dark') {
-        document.body.classList.add('dark-mode');
-        if (sunIcon) sunIcon.style.display = 'none';
-        if (moonIcon) moonIcon.style.display = 'inline-block';
+        document.documentElement.classList.add('dark');
+        if(sunIcon) sunIcon.classList.add('hidden');
+        if(moonIcon) moonIcon.classList.remove('hidden');
         if (themeToggleBtn) themeToggleBtn.setAttribute('aria-label', 'تغییر به حالت روشن');
     } else {
-        document.body.classList.remove('dark-mode');
-        if (sunIcon) sunIcon.style.display = 'inline-block';
-        if (moonIcon) moonIcon.style.display = 'none';
+        document.documentElement.classList.remove('dark');
+        if(sunIcon) sunIcon.classList.remove('hidden');
+        if(moonIcon) moonIcon.classList.add('hidden');
         if (themeToggleBtn) themeToggleBtn.setAttribute('aria-label', 'تغییر به حالت تاریک');
     }
 }
 
 function toggleTheme() {
-    let currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
-    let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    
+    let newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
     localStorage.setItem(LOCAL_STORAGE_THEME_KEY, newTheme);
     applyTheme(newTheme);
 }
@@ -1035,45 +792,31 @@ function toggleTheme() {
 function loadInitialTheme() {
     const savedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY);
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    if (savedTheme) {
-        applyTheme(savedTheme);
-    } else if (prefersDark) {
-        applyTheme('dark');
-    } else {
-        applyTheme('light');
-    }
+    if (savedTheme) applyTheme(savedTheme);
+    else if (prefersDark) applyTheme('dark');
+    else applyTheme('light');
 }
-// --- End Theme Toggle Functionality ---
-
 
 // Back to Top Button Functionality
 const backToTopButton = document.getElementById("backToTopBtn");
-
 if (backToTopButton) {
-    window.onscroll = function() {scrollFunction()};
-
-    function scrollFunction() {
+    window.onscroll = function() {
         if (document.body.scrollTop > 200 || document.documentElement.scrollTop > 200) {
-            if (backToTopButton) backToTopButton.style.display = "flex"; 
+            backToTopButton.classList.remove('hidden');
+            backToTopButton.classList.add('flex');
         } else {
-            if (backToTopButton) backToTopButton.style.display = "none";
+            backToTopButton.classList.remove('flex');
+            backToTopButton.classList.add('hidden');
         }
-    }
-
-    backToTopButton.addEventListener('click', function() {
-        document.body.scrollTop = 0; 
-        document.documentElement.scrollTop = 0; 
-    });
+    };
+    backToTopButton.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
-
+// --- Utility Functions ---
 function getQueryParams(url) {
     const params = {};
     if (!url) return params;
-    const queryStartIndex = url.indexOf('?');
-    if (queryStartIndex === -1) return params;
-    const queryString = url.substring(queryStartIndex + 1);
+    const queryString = url.split('?')[1];
     if (queryString) {
         try {
             const urlParams = new URLSearchParams(queryString);
@@ -1093,48 +836,50 @@ function addCommas(nStr) {
 }
 function getIconicPaginationText(originalText) {
     const trimmedText = originalText.trim();
-    if (trimmedText === '>>') return '«'; 
-    if (trimmedText === '<') return '›';  
-    if (trimmedText === '>') return '‹';  
-    if (trimmedText === '<<') return '»'; 
+    if (trimmedText === '>>') return '« <span class="hidden md:inline">ابتدا</span>';
+    if (trimmedText === '<') return '› <span class="hidden md:inline">بعدی</span>';
+    if (trimmedText === '>') return '<span class="hidden md:inline">قبلی</span> ‹';
+    if (trimmedText === '<<') return '<span class="hidden md:inline">انتها</span> »';
     return /^\d+$/.test(trimmedText) ? trimmedText : originalText;
 }
  function escapeHtml(unsafe) {
      if (typeof unsafe !== 'string') return unsafe === null || typeof unsafe === 'undefined' ? '' : String(unsafe);
-     return unsafe.replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">").replace(/"/g, "\"").replace(/'/g, "'");
+     return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
  }
- async function copyTextToClipboard(text) {
+ async function copyTextToClipboard(text, buttonElement) {
      try {
          await navigator.clipboard.writeText(text);
+         if(buttonElement){
+            const originalIcon = buttonElement.className;
+            buttonElement.className = "fas fa-check text-green-500 cursor-default";
+            setTimeout(() => {
+                buttonElement.className = originalIcon;
+            }, 1500);
+         }
      } catch (err) {
          console.error('Failed to copy: ', err);
          alert('امکان کپی خودکار وجود ندارد. لطفاً دستی کپی کنید.');
      }
  }
 
+// --- App Initialization ---
 document.addEventListener('DOMContentLoaded', function() {
-    // Get icon references after DOM is loaded
-    if (themeToggleBtn) { // Ensure themeToggleBtn itself was found
+    if (themeToggleBtn) {
         sunIcon = themeToggleBtn.querySelector('.fa-sun');
         moonIcon = themeToggleBtn.querySelector('.fa-moon');
-        themeToggleBtn.addEventListener('click', toggleTheme); // Add listener here
+        themeToggleBtn.addEventListener('click', toggleTheme);
     }
-    
-    loadInitialTheme(); 
+    loadInitialTheme();
 
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() { // Register after page loaded to not delay initial render
+        window.addEventListener('load', function() {
             navigator.serviceWorker.register('./sw.js')
-                .then(function(registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                })
-                .catch(function(err) {
-                    console.log('ServiceWorker registration failed: ', err);
-                });
+                .then(registration => console.log('ServiceWorker registration successful.'))
+                .catch(err => console.log('ServiceWorker registration failed: ', err));
         });
     }
-     
-    setTimeout(() => { 
-         SearchApp.init(); 
+    // Defer main app init slightly to ensure smooth initial paint
+    setTimeout(() => {
+         SearchApp.init();
      }, 50);
 });
