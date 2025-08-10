@@ -765,37 +765,58 @@ const SearchApp = {
 };
 
 // --- Theme Toggle Functionality ---
-const LOCAL_STORAGE_THEME_KEY = 'drugSearchTheme';
-const themeToggleBtn = document.getElementById('themeToggleBtn');
-let sunIcon, moonIcon;
+// This block contains the corrected and robust theme toggling logic.
+const theme = {
+    key: 'drugSearchTheme',
+    btn: null,
+    sunIcon: null,
+    moonIcon: null,
 
-function applyTheme(theme) {
-    if (theme === 'dark') {
-        document.documentElement.classList.add('dark');
-        if(sunIcon) sunIcon.classList.add('hidden');
-        if(moonIcon) moonIcon.classList.remove('hidden');
-        if (themeToggleBtn) themeToggleBtn.setAttribute('aria-label', 'تغییر به حالت روشن');
-    } else {
-        document.documentElement.classList.remove('dark');
-        if(sunIcon) sunIcon.classList.remove('hidden');
-        if(moonIcon) moonIcon.classList.add('hidden');
-        if (themeToggleBtn) themeToggleBtn.setAttribute('aria-label', 'تغییر به حالت تاریک');
+    init() {
+        this.btn = document.getElementById('themeToggleBtn');
+        if (!this.btn) return;
+
+        this.sunIcon = this.btn.querySelector('.fa-sun');
+        this.moonIcon = this.btn.querySelector('.fa-moon');
+
+        this.btn.addEventListener('click', () => this.toggle());
+
+        this.load();
+    },
+
+    toggle() {
+        const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+        localStorage.setItem(this.key, newTheme);
+        this.apply(newTheme);
+    },
+    
+    apply(mode) {
+        if (mode === 'dark') {
+            document.documentElement.classList.add('dark');
+            if (this.sunIcon) this.sunIcon.classList.add('hidden');
+            if (this.moonIcon) this.moonIcon.classList.remove('hidden');
+            if (this.btn) this.btn.setAttribute('aria-label', 'تغییر به حالت روشن');
+        } else {
+            document.documentElement.classList.remove('dark');
+            if (this.sunIcon) this.sunIcon.classList.remove('hidden');
+            if (this.moonIcon) this.moonIcon.classList.add('hidden');
+            if (this.btn) this.btn.setAttribute('aria-label', 'تغییر به حالت تاریک');
+        }
+    },
+
+    load() {
+        const savedTheme = localStorage.getItem(this.key);
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme) {
+            this.apply(savedTheme);
+        } else if (prefersDark) {
+            this.apply('dark');
+        } else {
+            this.apply('light');
+        }
     }
-}
-
-function toggleTheme() {
-    let newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
-    localStorage.setItem(LOCAL_STORAGE_THEME_KEY, newTheme);
-    applyTheme(newTheme);
-}
-
-function loadInitialTheme() {
-    const savedTheme = localStorage.getItem(LOCAL_STORAGE_THEME_KEY);
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (savedTheme) applyTheme(savedTheme);
-    else if (prefersDark) applyTheme('dark');
-    else applyTheme('light');
-}
+};
 
 // Back to Top Button Functionality
 const backToTopButton = document.getElementById("backToTopBtn");
@@ -863,13 +884,10 @@ function getIconicPaginationText(originalText) {
  }
 
 // --- App Initialization ---
+// This block correctly initializes all parts of the application after the DOM is ready.
 document.addEventListener('DOMContentLoaded', function() {
-    if (themeToggleBtn) {
-        sunIcon = themeToggleBtn.querySelector('.fa-sun');
-        moonIcon = themeToggleBtn.querySelector('.fa-moon');
-        themeToggleBtn.addEventListener('click', toggleTheme);
-    }
-    loadInitialTheme();
+    // Initialize the theme switcher first to prevent visual flicker
+    theme.init();
 
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
@@ -878,6 +896,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 .catch(err => console.log('ServiceWorker registration failed: ', err));
         });
     }
+
     // Defer main app init slightly to ensure smooth initial paint
     setTimeout(() => {
          SearchApp.init();
