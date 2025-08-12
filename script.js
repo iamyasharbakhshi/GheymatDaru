@@ -523,7 +523,6 @@ const SearchApp = {
         const clickedImageContainer = event.target.closest('.drug-image-container');
         const clickedSuggestionLink = event.target.closest('.suggestions-list a');
         const clickedCopyButton = event.target.closest('.copy-button');
-        const clickedPaginationLink = event.target.closest('.pagination a');
         
         if (clickedImageContainer) {
             event.preventDefault();
@@ -545,24 +544,6 @@ const SearchApp = {
             if (textToCopyElement) {
                 const textToCopy = textToCopyElement.textContent.trim();
                 copyTextToClipboard(textToCopy, clickedCopyButton);
-            }
-        } else if (clickedPaginationLink) {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            // Check if the link is disabled
-            if (clickedPaginationLink.getAttribute('aria-disabled') === 'true') {
-                return;
-            }
-            
-            const page = clickedPaginationLink.getAttribute('data-page');
-            const term = clickedPaginationLink.getAttribute('data-term');
-            
-            if (page && term) {
-                console.log(`Pagination clicked: page=${page}, term=${term}`);
-                this.performSearch(term, parseInt(page));
-            } else {
-                console.error('Missing page or term in pagination link', clickedPaginationLink);
             }
         }
     },
@@ -888,15 +869,19 @@ const SearchApp = {
                     finalClasses = `${baseClasses} bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed`;
                     ariaAttrs += ` aria-disabled="true"`;
                 } else {
-                    finalClasses = `${baseClasses} bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600`;
+                    finalClasses = `${baseClasses} bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 cursor-pointer`;
                     ariaAttrs += ` aria-label="رفتن به صفحه ${pageNum}"`;
                 }
                 
-                paginationHtml += `<li><a href="#" class="${finalClasses}" ${ariaAttrs}>${buttonText}</a></li>`;
+                // Use a button element instead of a link for pagination
+                paginationHtml += `<li><button type="button" class="${finalClasses}" ${ariaAttrs}>${buttonText}</button></li>`;
             });
             
             paginationHtml += '</ul></nav>';
             resultsListContainer.insertAdjacentHTML('afterend', paginationHtml);
+            
+            // Attach event listeners directly to pagination buttons
+            this.attachPaginationEventListeners();
         }
         
         this.sortSelect = this.resultDiv.querySelector('#sortSelect');
@@ -911,6 +896,34 @@ const SearchApp = {
         
         this.allResultsOnCurrentPage = Array.from(this.resultDiv.querySelectorAll('.result-item'));
         this.applySortingAndFiltering();
+    },
+    
+    // Add a new method to handle pagination event listeners
+    attachPaginationEventListeners() {
+        // Remove any existing event listeners to prevent duplicates
+        const existingButtons = this.resultDiv.querySelectorAll('.pagination button[data-page]');
+        existingButtons.forEach(button => {
+            button.removeEventListener('click', this.handlePaginationClick);
+        });
+        
+        // Add event listeners to pagination buttons
+        const paginationButtons = this.resultDiv.querySelectorAll('.pagination button:not([aria-disabled="true"])');
+        paginationButtons.forEach(button => {
+            button.addEventListener('click', this.handlePaginationClick.bind(this));
+        });
+    },
+
+    // Add a new method to handle pagination clicks
+    handlePaginationClick(event) {
+        const page = event.target.getAttribute('data-page');
+        const term = event.target.getAttribute('data-term');
+        
+        if (page && term) {
+            console.log(`Pagination clicked: page=${page}, term=${term}`);
+            this.performSearch(term, parseInt(page));
+        } else {
+            console.error('Missing page or term in pagination button', event.target);
+        }
     },
     
     applySortingAndFiltering() {
