@@ -3,13 +3,28 @@
 function getQueryParams(url) {
     const params = {};
     if (!url) return params;
-    const queryString = url.split('?')[1];
-    if (queryString) {
-        try {
+    
+    try {
+        // If url is a string, parse it
+        if (typeof url === 'string') {
+            const queryString = url.split('?')[1];
+            if (!queryString) return params;
+            
             const urlParams = new URLSearchParams(queryString);
-            for (const [key, value] of urlParams) { params[key] = value; }
-        } catch(e) { console.error("Error parsing query:", queryString, e); }
+            for (const [key, value] of urlParams) { 
+                params[key] = value; 
+            }
+        } 
+        // If url is already a URLSearchParams object
+        else if (url instanceof URLSearchParams) {
+            for (const [key, value] of url) { 
+                params[key] = value; 
+            }
+        }
+    } catch(e) { 
+        console.error("Error parsing query:", url, e); 
     }
+    
     return params;
 }
 
@@ -379,7 +394,11 @@ const SearchApp = {
             if(this.termInput) this.termInput.value = initialTerm;
             this.handleInputDirection();
             this.handleClearButtonVisibility();
-            this.performSearch(initialTerm, initialPage);
+            
+            // Use a small delay to ensure everything is initialized
+            setTimeout(() => {
+                this.performSearch(initialTerm, initialPage);
+            }, 100);
         } else {
             this.showInitialMessages();
         }
@@ -403,6 +422,8 @@ const SearchApp = {
         const urlParams = getQueryParams(window.location.search);
         const poppedTerm = urlParams['Term'] || '';
         const poppedPage = urlParams['PageNumber'] ? parseInt(urlParams['PageNumber']) : 1;
+        
+        console.log(`Popstate: term=${poppedTerm}, page=${poppedPage}`);
         
         if (this.termInput) this.termInput.value = poppedTerm;
         this.handleInputDirection();
@@ -666,12 +687,14 @@ const SearchApp = {
         const encodedSearchTerm = encodeURIComponent(searchTerm);
         const targetUrl = `${this.targetBaseUrl}${this.searchEndpoint}?Term=${encodedSearchTerm}&PageNumber=${pageNumber}&PageSize=${pageSize}`;
         
+        // Update URL without reloading the page
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set('Term', searchTerm);
         currentUrl.searchParams.set('PageNumber', pageNumber);
         history.pushState({ term: searchTerm, page: pageNumber }, '', currentUrl.toString());
         
         try {
+            console.log(`Fetching: ${targetUrl}`);
             const response = await fetch(targetUrl);
             if (!response.ok) throw new Error(`HTTP error ${response.status}.`);
             
@@ -696,6 +719,7 @@ const SearchApp = {
                 this.allResultsOnCurrentPage = [];
             }
         } catch (error) { 
+            console.error('Search failed:', error);
             this.renderError(error); 
             this.allResultsOnCurrentPage = []; 
         }
@@ -824,7 +848,7 @@ const SearchApp = {
         resultsListContainer.appendChild(fragment);
         
         if (paginationElement) {
-            let paginationHtml = '<nav aria-label="ناوبری صفحات"><ul class="flex justify-center items-center gap-1 md:gap-2 mt-6">';
+            let paginationHtml = '<nav aria-label="ناوبری صفحات" class="pagination"><ul class="flex justify-center items-center gap-1 md:gap-2 mt-6">';
             
             paginationElement.querySelectorAll('li a').forEach(link => {
                 const originalLinkText = link.textContent;
@@ -855,15 +879,11 @@ const SearchApp = {
             paginationHtml += '</ul></nav>';
             resultsListContainer.insertAdjacentHTML('afterend', paginationHtml);
             
-            // Event delegation for pagination links
-            this.resultDiv.querySelectorAll('.pagination a:not([aria-disabled="true"])').forEach(link => {
-                link.addEventListener('click', e => {
-                    e.preventDefault();
-                    const page = link.getAttribute('data-page');
-                    const term = link.getAttribute('data-term');
-                    if (page && term) this.performSearch(term, parseInt(page));
-                });
-            });
+            // Use event delegation for pagination links
+            // Add a small delay to ensure DOM is updated
+            setTimeout(() => {
+                this.attachPaginationEventListeners();
+            }, 10);
         }
         
         this.sortSelect = this.resultDiv.querySelector('#sortSelect');
@@ -878,6 +898,35 @@ const SearchApp = {
         
         this.allResultsOnCurrentPage = Array.from(this.resultDiv.querySelectorAll('.result-item'));
         this.applySortingAndFiltering();
+    },
+    
+    // Add a new method to handle pagination event listeners
+    attachPaginationEventListeners() {
+        // Remove any existing event listeners to prevent duplicates
+        const existingLinks = this.resultDiv.querySelectorAll('.pagination a[data-page]');
+        existingLinks.forEach(link => {
+            link.removeEventListener('click', this.handlePaginationClick);
+        });
+        
+        // Add event listeners to pagination links
+        const paginationLinks = this.resultDiv.querySelectorAll('.pagination a:not([aria-disabled="true"])');
+        paginationLinks.forEach(link => {
+            link.addEventListener('click', this.handlePaginationClick.bind(this));
+        });
+    },
+
+    // Add a new method to handle pagination clicks
+    handlePaginationClick(event) {
+        event.preventDefault();
+        const page = event.target.getAttribute('data-page');
+        const term = event.target.getAttribute('data-term');
+        
+        if (page && term) {
+            console.log(`Pagination clicked: page=${page}, term=${term}`);
+            this.performSearch(term, parseInt(page));
+        } else {
+            console.error('Missing page or term in pagination link', event.target);
+        }
     },
     
     applySortingAndFiltering() {
