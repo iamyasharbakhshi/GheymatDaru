@@ -4,23 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>قیمت‌دارو</title>
-
-    <!-- Persian Font: Vazirmatn -->
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
+    
+    <!-- Persian Font: Vazirmatn with font-display: swap -->
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <meta name="theme-color" content="#1E40AF">
     <link rel="manifest" href="./manifest.json">
-
-    <!-- 
-      ==================================================================
-      == THIS IS THE CRUCIAL FIX ==
-      Add this configuration script BEFORE the main Tailwind script.
-      This tells Tailwind to use the 'class' strategy for dark mode.
-      ==================================================================
-    -->
+    
+    <!-- Inline critical CSS -->
+    <style>
+        /* Critical CSS for initial layout */
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f3f4f6;
+            color: #1f2937;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        .hidden {
+            display: none;
+        }
+        .flex {
+            display: flex;
+        }
+        .justify-between {
+            justify-content: space-between;
+        }
+        .items-center {
+            align-items: center;
+        }
+        .mb-6 {
+            margin-bottom: 1.5rem;
+        }
+        .text-2xl {
+            font-size: 1.5rem;
+        }
+        .font-bold {
+            font-weight: bold;
+        }
+        .text-blue-800 {
+            color: #1e40af;
+        }
+        .p-2 {
+            padding: 0.5rem;
+        }
+        .rounded-full {
+            border-radius: 9999px;
+        }
+        .focus\:outline-none:focus {
+            outline: none;
+        }
+        .focus\:ring-2:focus {
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+        .bg-white {
+            background-color: #ffffff;
+        }
+        .dark .bg-white {
+            background-color: #1f2937;
+        }
+        .dark {
+            background-color: #111827;
+            color: #f3f4f6;
+        }
+        .dark .text-blue-800 {
+            color: #60a5fa;
+        }
+        /* Add more critical styles as needed */
+    </style>
+    
     <script>
+        // Configure Tailwind before loading
         tailwind.config = {
             darkMode: 'class',
         }
@@ -28,26 +94,31 @@
     
     <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-
+    
     <style>
-        /* Custom styles to be used with Tailwind */
+        /* Custom styles */
         body {
             font-family: 'Vazirmatn', sans-serif;
         }
-        /* This style works because it's standard CSS */
         .highlight {
-            background-color: #fefcbf; /* yellow-200 */
-            color: #374151; /* gray-700 */
+            background-color: #fefcbf;
+            color: #374151;
         }
-        /* This style also works because it's standard CSS responding to the .dark class */
         .dark .highlight {
-            background-color: #b45309; /* yellow-700 */
-            color: #f3f4f6; /* gray-100 */
+            background-color: #b45309;
+            color: #f3f4f6;
         }
+        /* Spinner animation */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        /* Add more custom styles as needed */
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
-
     <div class="container mx-auto p-4 md:p-6 lg:p-8">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-blue-800 dark:text-blue-400">جستجوی دارو</h1>
@@ -56,7 +127,6 @@
                 <i class="fas fa-moon text-xl hidden"></i>
             </button>
         </div>
-
         <section id="subscribe" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
             <div class="w-full">
                 <label for="Term" class="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">داروی مورد نظر را جستجو نمایید</label>
@@ -69,20 +139,16 @@
                 </form>
             </div>
         </section>
-
         <div id="searchHistory" class="mb-6 hidden">
              <h4 class="text-lg font-semibold mb-2 text-gray-600 dark:text-gray-400">جستجوهای اخیر</h4>
              <ul id="searchHistoryList" class="flex flex-wrap gap-2"></ul>
         </div>
-
         <div id="simulationResult" aria-live="polite">
             <p id="initialMessage" class="text-center text-gray-500 dark:text-gray-400 py-10">داروی مورد نظر خود را جستجو کنید.</p>
         </div>
     </div>
-
     <!-- Modal Overlay -->
     <div id="modalOverlay" class="fixed inset-0 bg-black bg-opacity-75 hidden transition-opacity duration-300"></div>
-
     <!-- Image Modal -->
     <div id="imageModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-labelledby="modalCaption">
         <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
@@ -98,12 +164,10 @@
         <button id="nextImageButton" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-4 rounded-full hover:bg-opacity-75 focus:outline-none text-2xl hidden">›</button>
     </div>
 
-
      <!-- Back to Top Button -->
      <button id="backToTopBtn" title="بازگشت به بالا" aria-label="بازگشت به بالا" class="hidden fixed bottom-5 right-5 bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-lg items-center justify-center text-xl transition-opacity">
         <i class="fas fa-arrow-up"></i>
     </button>
-
     <script src="script.js" type="module"></script>
 </body>
 </html>
