@@ -523,6 +523,7 @@ const SearchApp = {
         const clickedImageContainer = event.target.closest('.drug-image-container');
         const clickedSuggestionLink = event.target.closest('.suggestions-list a');
         const clickedCopyButton = event.target.closest('.copy-button');
+        const clickedPaginationLink = event.target.closest('.pagination a');
         
         if (clickedImageContainer) {
             event.preventDefault();
@@ -544,6 +545,24 @@ const SearchApp = {
             if (textToCopyElement) {
                 const textToCopy = textToCopyElement.textContent.trim();
                 copyTextToClipboard(textToCopy, clickedCopyButton);
+            }
+        } else if (clickedPaginationLink) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            // Check if the link is disabled
+            if (clickedPaginationLink.getAttribute('aria-disabled') === 'true') {
+                return;
+            }
+            
+            const page = clickedPaginationLink.getAttribute('data-page');
+            const term = clickedPaginationLink.getAttribute('data-term');
+            
+            if (page && term) {
+                console.log(`Pagination clicked: page=${page}, term=${term}`);
+                this.performSearch(term, parseInt(page));
+            } else {
+                console.error('Missing page or term in pagination link', clickedPaginationLink);
             }
         }
     },
@@ -878,12 +897,6 @@ const SearchApp = {
             
             paginationHtml += '</ul></nav>';
             resultsListContainer.insertAdjacentHTML('afterend', paginationHtml);
-            
-            // Use event delegation for pagination links
-            // Add a small delay to ensure DOM is updated
-            setTimeout(() => {
-                this.attachPaginationEventListeners();
-            }, 10);
         }
         
         this.sortSelect = this.resultDiv.querySelector('#sortSelect');
@@ -898,35 +911,6 @@ const SearchApp = {
         
         this.allResultsOnCurrentPage = Array.from(this.resultDiv.querySelectorAll('.result-item'));
         this.applySortingAndFiltering();
-    },
-    
-    // Add a new method to handle pagination event listeners
-    attachPaginationEventListeners() {
-        // Remove any existing event listeners to prevent duplicates
-        const existingLinks = this.resultDiv.querySelectorAll('.pagination a[data-page]');
-        existingLinks.forEach(link => {
-            link.removeEventListener('click', this.handlePaginationClick);
-        });
-        
-        // Add event listeners to pagination links
-        const paginationLinks = this.resultDiv.querySelectorAll('.pagination a:not([aria-disabled="true"])');
-        paginationLinks.forEach(link => {
-            link.addEventListener('click', this.handlePaginationClick.bind(this));
-        });
-    },
-
-    // Add a new method to handle pagination clicks
-    handlePaginationClick(event) {
-        event.preventDefault();
-        const page = event.target.getAttribute('data-page');
-        const term = event.target.getAttribute('data-term');
-        
-        if (page && term) {
-            console.log(`Pagination clicked: page=${page}, term=${term}`);
-            this.performSearch(term, parseInt(page));
-        } else {
-            console.error('Missing page or term in pagination link', event.target);
-        }
     },
     
     applySortingAndFiltering() {
