@@ -26,6 +26,59 @@ function addCommas(nStr) {
     return x1 + x2;
 }
 
+function toPersianDigits(str) {
+    if (!str) return '';
+    return str.toString().replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+}
+
+// Translate English Packaging text to Persian
+function translatePackaging(text) {
+    if (!text) return '';
+    
+    let translated = text.toUpperCase();
+    
+    // Dictionary of pharmaceutical terms
+    const dict = [
+        { en: 'BLISTER PACK', fa: 'بلیستر (ورق)' },
+        { en: 'PACKAGE', fa: 'بسته' },
+        { en: 'PACK', fa: 'بسته' },
+        { en: 'BOX', fa: 'جعبه' },
+        { en: 'BOTTLE', fa: 'بطری' },
+        { en: 'CARTON', fa: 'کارتن' },
+        { en: 'TABLET', fa: 'قرص' },
+        { en: 'CAPSULE', fa: 'کپسول' },
+        { en: 'AMPULE', fa: 'آمپول' },
+        { en: 'VIAL', fa: 'ویال' },
+        { en: 'SUPPOSITORY', fa: 'شیاف' },
+        { en: 'TUBE', fa: 'تیوپ' },
+        { en: 'SYRINGE', fa: 'سرنگ' },
+        { en: 'PEN', fa: 'قلم' },
+        { en: 'SACHET', fa: 'ساشه' },
+        { en: 'DROP', fa: 'قطره' },
+        { en: 'SPRAY', fa: 'اسپری' },
+        { en: 'CREAM', fa: 'کرم' },
+        { en: 'OINTMENT', fa: 'پماد' },
+        { en: 'GEL', fa: 'ژل' },
+        { en: 'SOLUTION', fa: 'محلول' },
+        { en: 'SUSPENSION', fa: 'سوسپانسیون' },
+        { en: 'CARTRIDGE', fa: 'کارتریج' },
+        { en: 'WITH APPLICATOR', fa: 'همراه با اپلیکاتور' },
+        { en: 'WITH', fa: 'با' },
+        { en: ' IN ', fa: ' در ' }, // Spaces match exact word
+        { en: ' OF ', fa: ' از ' }
+    ];
+
+    // Replace words
+    dict.forEach(item => {
+        // Use Regex to replace all occurrences case-insensitively
+        const regex = new RegExp(item.en, 'gi');
+        translated = translated.replace(regex, item.fa);
+    });
+
+    // Convert numbers to Persian
+    return toPersianDigits(translated);
+}
+
 async function copyTextToClipboard(text, buttonElement) {
     try {
         await navigator.clipboard.writeText(text);
@@ -264,10 +317,8 @@ const SearchApp = {
             }
         });
 
-        // Use Delegation for static elements, but specialized for dynamic ones
         this.elements.resultsArea.addEventListener('click', (e) => this.handleResultClick(e));
         
-        // Listen for filter/sort changes on the Results Area
         this.elements.resultsArea.addEventListener('change', (e) => {
             if (e.target.id === 'sortSelect') {
                 this.state.currentSort = e.target.value;
@@ -300,7 +351,6 @@ const SearchApp = {
     resetView() {
         this.elements.initialMsg.classList.remove('hidden');
         this.elements.skeleton.classList.add('hidden');
-        // Clear containers
         const containers = ['resultsControls', 'resultsGrid', 'resultsPagination'];
         containers.forEach(id => {
             const el = document.getElementById(id);
@@ -308,7 +358,6 @@ const SearchApp = {
         });
     },
 
-    // Create persistent containers to ensure order: Controls -> Grid -> Pagination
     setupResultContainers() {
         this.elements.resultsArea.innerHTML = '';
         
@@ -329,11 +378,7 @@ const SearchApp = {
 
     async performSearch(term, page = 1) {
         this.elements.initialMsg.classList.add('hidden');
-        
-        // Clear previous results view but keep structure if possible, 
-        // or just rebuild. Rebuilding is safer for the skeleton logic.
         this.resetView(); 
-
         this.elements.skeleton.classList.remove('hidden');
         this.elements.skeleton.classList.add('grid');
 
@@ -372,7 +417,6 @@ const SearchApp = {
             return;
         }
 
-        // Initialize Layout Containers
         this.setupResultContainers();
 
         this.state.results = Array.from(rows).map((row, idx) => {
@@ -394,7 +438,8 @@ const SearchApp = {
                     if (label.includes('برند')) data.owner = val;
                     if (label.includes('کد ژنریک')) data.genericCode = val;
                     if (label.includes('فرآورده')) data.productCode = val;
-                    if (label.includes('بسته')) data.packaging = val;
+                    // Apply translation to packaging
+                    if (label.includes('بسته')) data.packaging = translatePackaging(val);
                     if (label.includes('پروانه')) data.licenseHolder = val;
                 }
             });
@@ -437,16 +482,15 @@ const SearchApp = {
             </div>
         `;
         
-        // Restore previous selection if re-rendering (not fully implemented for simplicty, but good practice)
         if(this.state.currentSort !== 'none') document.getElementById('sortSelect').value = this.state.currentSort;
         if(this.state.currentFilter !== 'all') document.getElementById('filterSelect').value = this.state.currentFilter;
     },
 
     renderResultsGrid() {
         const grid = document.getElementById('resultsGrid');
-        if (!grid) return; // Should not happen given setupResultContainers
+        if (!grid) return;
 
-        grid.innerHTML = ''; // Clear content, keep container in place
+        grid.innerHTML = '';
 
         let displayData = [...this.state.results];
         
@@ -461,11 +505,10 @@ const SearchApp = {
         if (displayData.length === 0) {
             grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">موردی با این فیلتر یافت نشد.</div>';
         } else {
-            // Use DocumentFragment for performance
             const frag = document.createDocumentFragment();
             
             displayData.forEach(item => {
-                const priceFormatted = item.price ? addCommas(item.price) : 'نامشخص';
+                const priceFormatted = item.price ? addCommas(toPersianDigits(item.price)) : 'نامشخص';
                 const hasImage = !!item.img;
                 
                 const card = document.createElement('div');
@@ -509,7 +552,7 @@ const SearchApp = {
                     ${item.genericCode ? `
                     <div class="mb-4 text-xs">
                          <span class="inline-flex items-center bg-gray-100 dark:bg-gray-700/50 px-2 py-1 rounded text-gray-600 dark:text-gray-400">
-                            <span class="opacity-50 ml-1">کد ژنریک:</span> ${item.genericCode}
+                            <span class="opacity-50 ml-1">کد ژنریک:</span> ${toPersianDigits(item.genericCode)}
                          </span>
                     </div>` : ''}
 
@@ -555,6 +598,9 @@ const SearchApp = {
             if (text === '<<') content = '<i class="fas fa-angle-double-left"></i>';
             if (text === '>') content = '<i class="fas fa-angle-right"></i>';
             if (text === '<') content = '<i class="fas fa-angle-left"></i>';
+            
+            // Convert numbers in pagination to Persian
+            if (/^\d+$/.test(content)) content = toPersianDigits(content);
 
             const li = document.createElement('li');
             const btn = document.createElement('button');
@@ -566,7 +612,6 @@ const SearchApp = {
             }`;
             btn.innerHTML = content;
             
-            // Fix: Add event listener programmatically instead of onclick string
             btn.addEventListener('click', () => {
                 this.performSearch(term, pageNum);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -577,7 +622,7 @@ const SearchApp = {
         });
 
         nav.appendChild(ul);
-        container.innerHTML = ''; // Clear existing pagination if any
+        container.innerHTML = '';
         container.appendChild(nav);
     },
 
@@ -609,7 +654,6 @@ const SearchApp = {
         `;
         this.elements.resultsArea.innerHTML = html;
 
-        // Attach suggestion listeners
         this.elements.resultsArea.querySelectorAll('.suggestion-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const t = btn.dataset.term;
