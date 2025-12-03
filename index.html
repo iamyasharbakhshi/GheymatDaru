@@ -1,173 +1,313 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="fa" dir="rtl" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>قیمت‌دارو</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>قیمت‌دارو | جستجوی هوشمند</title>
     
-    <!-- Preload critical resources -->
-    <link rel="preload" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" as="style">
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style">
-    
-    <!-- Persian Font: Vazirmatn with font-display: swap -->
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
-    <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <meta name="theme-color" content="#1E40AF">
-    <link rel="manifest" href="./manifest.json">
-    
-    <!-- Inline critical CSS -->
-    <style>
-        /* Critical CSS for initial layout */
-        body {
-            font-family: 'Vazirmatn', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f3f4f6;
-            color: #1f2937;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
-        .hidden {
-            display: none;
-        }
-        .flex {
-            display: flex;
-        }
-        .justify-between {
-            justify-content: space-between;
-        }
-        .items-center {
-            align-items: center;
-        }
-        .mb-6 {
-            margin-bottom: 1.5rem;
-        }
-        .text-2xl {
-            font-size: 1.5rem;
-        }
-        .font-bold {
-            font-weight: bold;
-        }
-        .text-blue-800 {
-            color: #1e40af;
-        }
-        .p-2 {
-            padding: 0.5rem;
-        }
-        .rounded-full {
-            border-radius: 9999px;
-        }
-        .focus\:outline-none:focus {
-            outline: none;
-        }
-        .focus\:ring-2:focus {
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-        }
-        .bg-white {
-            background-color: #ffffff;
-        }
-        .dark .bg-white {
-            background-color: #1f2937;
-        }
-        .dark {
-            background-color: #111827;
-            color: #f3f4f6;
-        }
-        .dark .text-blue-800 {
-            color: #60a5fa;
-        }
-        /* Add more critical styles as needed */
-    </style>
-    
-    <script>
-        // Configure Tailwind before loading
-        tailwind.config = {
-            darkMode: 'class',
-        }
-    </script>
-    
-    <!-- Tailwind CSS via CDN -->
+    <!-- Tailwind CSS (v3.4) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Vazirmatn', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                        },
+                        glass: {
+                            light: 'rgba(255, 255, 255, 0.7)',
+                            dark: 'rgba(17, 24, 39, 0.7)',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
-        /* Custom styles */
-        body {
-            font-family: 'Vazirmatn', sans-serif;
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-        .highlight {
-            background-color: #fefcbf;
-            color: #374151;
+        ::-webkit-scrollbar-track {
+            background: transparent;
         }
-        .dark .highlight {
-            background-color: #b45309;
-            color: #f3f4f6;
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
         }
-        /* Spinner animation */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #475569;
         }
-        .animate-spin {
-            animation: spin 1s linear infinite;
+        
+        /* Glass Morphism Base */
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        /* Add more custom styles as needed */
+        .dark .glass-panel {
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* Hide Number Input Arrows */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
-    <div class="container mx-auto p-4 md:p-6 lg:p-8">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl md:text-3xl font-bold text-blue-800 dark:text-blue-400">جستجوی دارو</h1>
-            <button id="themeToggleBtn" aria-label="تغییر به حالت تاریک" class="p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                <i class="fas fa-sun text-xl"></i>
-                <i class="fas fa-moon text-xl hidden"></i>
-            </button>
-        </div>
-        <section id="subscribe" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-6">
-            <div class="w-full">
-                <label for="Term" class="block text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">داروی مورد نظر را جستجو نمایید</label>
-                <form action="#" method="post" class="flex flex-col sm:flex-row gap-4">
-                    <div class="relative flex-grow">
-                        <input id="Term" name="Term" type="text" value="" placeholder="نام دارو..." class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow" />
-                        <span id="clearSearchInput" role="button" tabindex="0" aria-label="پاک کردن جستجو" class="absolute left-3 top-1/2 -translate-y-1/2 text-2xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer hidden">&times;</span>
-                    </div>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-transform transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">جستجو</button>
-                </form>
-            </div>
-        </section>
-        <div id="searchHistory" class="mb-6 hidden">
-             <h4 class="text-lg font-semibold mb-2 text-gray-600 dark:text-gray-400">جستجوهای اخیر</h4>
-             <ul id="searchHistoryList" class="flex flex-wrap gap-2"></ul>
-        </div>
-        <div id="simulationResult" aria-live="polite">
-            <p id="initialMessage" class="text-center text-gray-500 dark:text-gray-400 py-10">داروی مورد نظر خود را جستجو کنید.</p>
-        </div>
-    </div>
-    <!-- Modal Overlay -->
-    <div id="modalOverlay" class="fixed inset-0 bg-black bg-opacity-75 hidden transition-opacity duration-300"></div>
-    <!-- Image Modal -->
-    <div id="imageModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden" role="dialog" aria-modal="true" aria-labelledby="modalCaption">
-        <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
-            <div id="modalLoadingSpinner" class="absolute inset-0 flex items-center justify-center bg-white dark:bg-gray-800 rounded-lg z-10">
-                <div class="spinner animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
-            </div>
-            <img id="zoomedImage" class="w-full h-auto object-contain rounded-t-lg flex-grow" src="" alt="Zoomed Image">
-            <div id="modalCaption" class="text-center p-4 bg-gray-100 dark:bg-gray-700 text-sm font-semibold rounded-b-lg" aria-live="polite"></div>
-            <div id="modalMiniMap" class="p-2 bg-gray-200 dark:bg-gray-900 overflow-x-auto whitespace-nowrap hidden"></div>
-        </div>
-        <button id="closeImageModalButton" class="absolute top-4 right-4 text-white text-4xl font-bold hover:text-gray-300 focus:outline-none" role="button" tabindex="0" aria-label="بستن پنجره">&times;</button>
-        <button id="prevImageButton" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-4 rounded-full hover:bg-opacity-75 focus:outline-none text-2xl hidden">‹</button>
-        <button id="nextImageButton" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black bg-opacity-50 text-white p-4 rounded-full hover:bg-opacity-75 focus:outline-none text-2xl hidden">›</button>
+<body class="bg-gray-50 dark:bg-gray-950 text-slate-800 dark:text-slate-100 transition-colors duration-300 min-h-screen relative overflow-x-hidden selection:bg-primary-500 selection:text-white">
+
+    <!-- Ambient Background Blobs (Aurora Effect) -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none -z-10">
+        <div class="absolute top-0 right-[-10%] w-96 h-96 bg-purple-300 dark:bg-purple-900/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-70 animate-blob"></div>
+        <div class="absolute top-[10%] left-[-10%] w-96 h-96 bg-blue-300 dark:bg-blue-900/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div class="absolute bottom-[-10%] left-[20%] w-96 h-96 bg-teal-300 dark:bg-teal-900/30 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
     </div>
 
-     <!-- Back to Top Button -->
-     <button id="backToTopBtn" title="بازگشت به بالا" aria-label="بازگشت به بالا" class="hidden fixed bottom-5 right-5 bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-lg items-center justify-center text-xl transition-opacity">
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-40 w-full glass-panel bg-white/70 dark:bg-gray-900/70 border-b border-gray-200/50 dark:border-gray-800/50">
+        <div class="container mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-primary-600 text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-lg shadow-primary-500/30">
+                    <i class="fas fa-capsules"></i>
+                </div>
+                <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-l from-primary-600 to-purple-600 dark:from-primary-400 dark:to-purple-400">
+                    قیمت‌دارو
+                </span>
+            </div>
+            
+            <button id="themeToggleBtn" aria-label="تغییر تم" class="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all focus:ring-2 focus:ring-primary-500 outline-none">
+                <i class="fas fa-sun text-lg dark:hidden transition-transform rotate-0"></i>
+                <i class="fas fa-moon text-lg hidden dark:block transition-transform rotate-0"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 pt-12 pb-20 max-w-5xl">
+        
+        <!-- Hero & Search Section -->
+        <section class="text-center mb-12 animate-fade-in">
+            <h1 class="text-3xl md:text-5xl font-black mb-4 text-slate-800 dark:text-white tracking-tight">
+                جستجوی سریع <span class="text-primary-600 dark:text-primary-400">دارو</span>
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 mb-8 text-lg max-w-2xl mx-auto">
+                دسترسی آنی به قیمت و اطلاعات داروخانه‌های سراسر کشور
+            </p>
+
+            <div class="relative max-w-2xl mx-auto group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-primary-600 to-purple-600 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-500"></div>
+                <form action="#" method="post" class="relative flex items-center bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
+                    <div class="flex-grow relative">
+                        <i class="fas fa-search absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                        <input id="Term" name="Term" type="text" placeholder="نام دارو را وارد کنید (مثلا: استامینوفن)..." 
+                               class="w-full bg-transparent border-none py-5 pr-12 pl-12 text-gray-700 dark:text-gray-200 placeholder-gray-400 focus:ring-0 text-lg rounded-2xl" autocomplete="off" />
+                        <span id="clearSearchInput" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 cursor-pointer hidden p-2">
+                            <i class="fas fa-times"></i>
+                        </span>
+                    </div>
+                    <button type="submit" class="hidden sm:block m-2 bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-8 rounded-xl transition-all hover:shadow-lg shadow-primary-500/30">
+                        جستجو
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Mobile Search Button (Visible only on small screens) -->
+            <button type="button" class="mt-4 sm:hidden w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-primary-500/30">
+                جستجو کنید
+            </button>
+
+            <!-- Quick Suggestions -->
+            <div id="searchHistory" class="mt-6 hidden animate-fade-in">
+                <div class="flex flex-wrap justify-center gap-2 text-sm">
+                    <span class="text-gray-500 dark:text-gray-400 ml-2 py-1">جستجوهای اخیر:</span>
+                    <ul id="searchHistoryList" class="flex flex-wrap gap-2">
+                        <!-- Items will be injected here via JS as <li><button class="...">...</button></li> -->
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="simulationResult" aria-live="polite" class="min-h-[200px]">
+            <!-- Empty State -->
+            <div id="initialMessage" class="flex flex-col items-center justify-center py-12 text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
+                <i class="fas fa-prescription-bottle-medical text-6xl mb-4 opacity-50"></i>
+                <p class="text-lg">منتظر جستجوی شما هستیم...</p>
+            </div>
+
+            <!-- 
+               DEVELOPER NOTE: 
+               Use the structure below when injecting results via JS.
+               This is the 2025 "Card" design.
+            -->
+            <!-- 
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="glass-panel bg-white/60 dark:bg-gray-800/60 rounded-2xl p-5 hover:transform hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-xl dark:shadow-none relative group overflow-hidden">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 px-3 py-1 rounded-full text-xs font-bold">موجود</div>
+                        <i class="far fa-heart text-gray-400 hover:text-red-500 cursor-pointer transition-colors"></i>
+                    </div>
+                    <h3 class="font-bold text-xl text-gray-800 dark:text-white mb-2">نام دارو</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">توضیحات کوتاه دارو...</p>
+                    <div class="flex items-center justify-between mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <span class="text-lg font-bold text-primary-600 dark:text-primary-400">۵۰,۰۰۰ تومان</span>
+                        <button class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-colors">
+                            <i class="fas fa-arrow-left text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            -->
+
+            <!-- Loading Skeleton (Hidden by default, toggle when searching) -->
+            <div id="loadingSkeleton" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Skeleton Item -->
+                <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-5 h-48 animate-pulse">
+                    <div class="flex justify-between mb-4">
+                        <div class="h-6 w-16 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+                        <div class="h-6 w-6 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+                    </div>
+                    <div class="h-6 w-3/4 bg-gray-300 dark:bg-gray-700 rounded mb-2"></div>
+                    <div class="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded mb-6"></div>
+                    <div class="flex justify-between mt-auto">
+                        <div class="h-6 w-24 bg-gray-300 dark:bg-gray-700 rounded"></div>
+                        <div class="h-8 w-8 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+                    </div>
+                </div>
+                <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-5 h-48 animate-pulse hidden md:block">
+                     <div class="h-full w-full bg-gray-300 dark:bg-gray-700 rounded opacity-10"></div>
+                </div>
+                <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-5 h-48 animate-pulse hidden lg:block">
+                     <div class="h-full w-full bg-gray-300 dark:bg-gray-700 rounded opacity-10"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm transition-opacity opacity-0" id="modalBackdrop"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 text-right shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-4xl scale-95 opacity-0" id="modalPanel">
+                    
+                    <!-- Close Button -->
+                    <button id="closeImageModalButton" class="absolute left-4 top-4 z-20 w-10 h-10 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition-colors focus:outline-none">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                    <div class="relative bg-black h-[60vh] flex items-center justify-center group">
+                        <!-- Loading Spinner in Modal -->
+                        <div id="modalLoadingSpinner" class="absolute inset-0 flex items-center justify-center z-0">
+                            <div class="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                        
+                        <img id="zoomedImage" class="max-h-full max-w-full object-contain relative z-10" src="" alt="Zoomed View">
+                        
+                        <!-- Nav Buttons -->
+                        <button id="prevImageButton" class="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md hidden group-hover:flex transition-all">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        <button id="nextImageButton" class="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md hidden group-hover:flex transition-all">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-6 bg-white dark:bg-gray-800">
+                        <div id="modalCaption" class="text-lg font-semibold text-gray-900 dark:text-white mb-4"></div>
+                        <!-- Mini Map / Thumbnails can go here -->
+                        <div id="modalMiniMap" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide hidden"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Top -->
+    <button id="backToTopBtn" class="fixed bottom-6 right-6 translate-y-20 opacity-0 bg-primary-600 hover:bg-primary-700 text-white w-12 h-12 rounded-full shadow-lg shadow-primary-600/40 flex items-center justify-center transition-all duration-300 z-40 focus:outline-none">
         <i class="fas fa-arrow-up"></i>
     </button>
-    <script src="script.js" type="module"></script>
+
+    <!-- Footer (Optional but recommended for 2025 look) -->
+    <footer class="text-center py-6 text-sm text-gray-500 dark:text-gray-500">
+        <p>&copy; 2025 قیمت‌دارو. طراحی شده با آخرین تکنولوژی‌ها</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="script.js"></script>
+    <script>
+        // Inline script for visual toggles to ensure immediate feedback
+        const termInput = document.getElementById('Term');
+        const clearBtn = document.getElementById('clearSearchInput');
+
+        termInput.addEventListener('input', (e) => {
+            if(e.target.value.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+        });
+
+        clearBtn.addEventListener('click', () => {
+            termInput.value = '';
+            clearBtn.classList.add('hidden');
+            termInput.focus();
+        });
+
+        // Simple animation for modal (logic should be in your main script.js)
+        // This is just to demonstrate the CSS transitions
+        function openModalDemo() {
+            const backdrop = document.getElementById('modalBackdrop');
+            const panel = document.getElementById('modalPanel');
+            const overlay = document.getElementById('modalOverlay');
+            
+            overlay.classList.remove('hidden');
+            // Small delay to allow display:block to apply before opacity transition
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                panel.classList.remove('opacity-0', 'scale-95');
+                panel.classList.add('opacity-100', 'scale-100');
+            }, 10);
+        }
+    </script>
 </body>
 </html>
