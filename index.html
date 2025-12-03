@@ -156,9 +156,7 @@
             <div id="searchHistory" class="mt-6 hidden animate-fade-in">
                 <div class="flex flex-wrap justify-center gap-2 text-sm">
                     <span class="text-gray-500 dark:text-gray-400 ml-2 py-1">جستجوهای اخیر:</span>
-                    <ul id="searchHistoryList" class="flex flex-wrap gap-2">
-                        <!-- Items will be injected here via JS as <li><button class="...">...</button></li> -->
-                    </ul>
+                    <ul id="searchHistoryList" class="flex flex-wrap gap-2"></ul>
                 </div>
             </div>
         </section>
@@ -171,33 +169,9 @@
                 <p class="text-lg">منتظر جستجوی شما هستیم...</p>
             </div>
 
-            <!-- 
-               DEVELOPER NOTE: 
-               Use the structure below when injecting results via JS.
-               This is the 2025 "Card" design.
-            -->
-            <!-- 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="glass-panel bg-white/60 dark:bg-gray-800/60 rounded-2xl p-5 hover:transform hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-xl dark:shadow-none relative group overflow-hidden">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-300 px-3 py-1 rounded-full text-xs font-bold">موجود</div>
-                        <i class="far fa-heart text-gray-400 hover:text-red-500 cursor-pointer transition-colors"></i>
-                    </div>
-                    <h3 class="font-bold text-xl text-gray-800 dark:text-white mb-2">نام دارو</h3>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4 line-clamp-2">توضیحات کوتاه دارو...</p>
-                    <div class="flex items-center justify-between mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
-                        <span class="text-lg font-bold text-primary-600 dark:text-primary-400">۵۰,۰۰۰ تومان</span>
-                        <button class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-colors">
-                            <i class="fas fa-arrow-left text-sm"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            -->
-
-            <!-- Loading Skeleton (Hidden by default, toggle when searching) -->
+            <!-- Loading Skeleton -->
             <div id="loadingSkeleton" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Skeleton Item -->
+                <!-- Skeleton Items -->
                 <div class="bg-white/50 dark:bg-gray-800/50 rounded-2xl p-5 h-48 animate-pulse">
                     <div class="flex justify-between mb-4">
                         <div class="h-6 w-16 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
@@ -254,7 +228,6 @@
 
                     <div class="p-6 bg-white dark:bg-gray-800">
                         <div id="modalCaption" class="text-lg font-semibold text-gray-900 dark:text-white mb-4"></div>
-                        <!-- Mini Map / Thumbnails can go here -->
                         <div id="modalMiniMap" class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide hidden"></div>
                     </div>
                 </div>
@@ -267,7 +240,6 @@
         <i class="fas fa-arrow-up"></i>
     </button>
 
-    <!-- Footer (Optional but recommended for 2025 look) -->
     <footer class="text-center py-6 text-sm text-gray-500 dark:text-gray-500">
         <p>&copy; 2025 قیمت‌دارو. طراحی شده با آخرین تکنولوژی‌ها</p>
     </footer>
@@ -275,7 +247,7 @@
     <!-- Scripts -->
     <script type="module" src="script.js"></script>
     <script>
-        // Inline script for visual toggles to ensure immediate feedback
+        // Inline logic for immediate input response
         const termInput = document.getElementById('Term');
         const clearBtn = document.getElementById('clearSearchInput');
 
@@ -292,22 +264,6 @@
             clearBtn.classList.add('hidden');
             termInput.focus();
         });
-
-        // Simple animation for modal (logic should be in your main script.js)
-        // This is just to demonstrate the CSS transitions
-        function openModalDemo() {
-            const backdrop = document.getElementById('modalBackdrop');
-            const panel = document.getElementById('modalPanel');
-            const overlay = document.getElementById('modalOverlay');
-            
-            overlay.classList.remove('hidden');
-            // Small delay to allow display:block to apply before opacity transition
-            setTimeout(() => {
-                backdrop.classList.remove('opacity-0');
-                panel.classList.remove('opacity-0', 'scale-95');
-                panel.classList.add('opacity-100', 'scale-100');
-            }, 10);
-        }
     </script>
 </body>
 </html>
