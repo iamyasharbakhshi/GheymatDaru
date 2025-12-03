@@ -26,14 +26,22 @@ function addCommas(nStr) {
     return x1 + x2;
 }
 
-function escapeHtml(unsafe) {
-    if (!unsafe) return '';
-    return String(unsafe)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+async function copyTextToClipboard(text, buttonElement) {
+    try {
+        await navigator.clipboard.writeText(text);
+        if(buttonElement){
+            // Visual feedback
+            const icon = buttonElement.querySelector('i') || buttonElement;
+            const originalClass = icon.className;
+            
+            icon.className = "fas fa-check text-green-500 scale-110 transition-transform";
+            setTimeout(() => {
+                icon.className = originalClass;
+            }, 1500);
+        }
+    } catch (err) {
+        console.error('Failed to copy', err);
+    }
 }
 
 function debounce(func, wait) {
@@ -44,23 +52,7 @@ function debounce(func, wait) {
     };
 }
 
-async function copyTextToClipboard(text, buttonElement) {
-    try {
-        await navigator.clipboard.writeText(text);
-        if(buttonElement){
-            // Visual feedback
-            const originalClass = buttonElement.className;
-            buttonElement.className = "fas fa-check text-green-500 transition-transform scale-125";
-            setTimeout(() => {
-                buttonElement.className = originalClass;
-            }, 1500);
-        }
-    } catch (err) {
-        console.error('Failed to copy', err);
-    }
-}
-
-// --- Image Modal Module (With Smooth Transitions) ---
+// --- Image Modal Module ---
 const ImageModal = {
     overlay: null,
     panel: null,
@@ -87,18 +79,15 @@ const ImageModal = {
 
         if (!this.overlay) return;
 
-        // Close events
         const closeHandler = () => this.hide();
         this.closeBtn?.addEventListener('click', closeHandler);
         this.overlay.addEventListener('click', (e) => {
             if (e.target === this.overlay || e.target === this.backdrop) closeHandler();
         });
 
-        // Navigation events
         this.prevBtn?.addEventListener('click', (e) => { e.stopPropagation(); this.nav(-1); });
         this.nextBtn?.addEventListener('click', (e) => { e.stopPropagation(); this.nav(1); });
 
-        // Keyboard support
         document.addEventListener('keydown', (e) => {
             if (this.overlay.classList.contains('hidden')) return;
             if (e.key === 'Escape') this.hide();
@@ -113,9 +102,8 @@ const ImageModal = {
         this.title = title;
 
         this.overlay.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden'); // Prevent background scrolling
+        document.body.classList.add('overflow-hidden');
 
-        // Animation: Wait for display:block to apply, then add opacity
         requestAnimationFrame(() => {
             this.backdrop.classList.remove('opacity-0');
             this.panel.classList.remove('opacity-0', 'scale-95');
@@ -135,7 +123,7 @@ const ImageModal = {
             this.overlay.classList.add('hidden');
             document.body.classList.remove('overflow-hidden');
             this.zoomedImage.src = '';
-        }, 300); // Match CSS transition duration
+        }, 300);
     },
 
     loadImage() {
@@ -213,15 +201,12 @@ const ImageModal = {
 
 // --- Search Application ---
 const SearchApp = {
-    // Config
     baseUrl: 'https://irc.fda.gov.ir',
     endpoints: { search: '/nfi/Search' },
     storageKeys: { history: 'drugHistory_v2', theme: 'drugTheme' },
     
-    // DOM Elements
     elements: {},
     
-    // State
     state: {
         results: [],
         currentSort: 'none',
@@ -229,7 +214,6 @@ const SearchApp = {
     },
 
     init() {
-        // Cache DOM elements
         this.elements = {
             form: document.querySelector('form'),
             input: document.getElementById('Term'),
@@ -241,12 +225,10 @@ const SearchApp = {
             historyList: document.getElementById('searchHistoryList'),
         };
 
-        // Initialize modules
         ImageModal.init();
         this.loadHistory();
         this.bindEvents();
         
-        // Check URL for existing search
         const params = getQueryParams(window.location.search);
         if (params.Term) {
             this.elements.input.value = decodeURIComponent(params.Term);
@@ -256,7 +238,6 @@ const SearchApp = {
     },
 
     bindEvents() {
-        // Form Submit
         this.elements.form.addEventListener('submit', (e) => {
             e.preventDefault();
             const term = this.elements.input.value.trim();
@@ -266,10 +247,8 @@ const SearchApp = {
             }
         });
 
-        // Input Handling
         this.elements.input.addEventListener('input', () => this.handleInputState());
         
-        // Clear Button
         this.elements.clearBtn.addEventListener('click', () => {
             this.elements.input.value = '';
             this.elements.input.focus();
@@ -277,7 +256,6 @@ const SearchApp = {
             this.resetView();
         });
 
-        // History Click
         this.elements.historyList.addEventListener('click', (e) => {
             const btn = e.target.closest('button');
             if (btn) {
@@ -288,10 +266,8 @@ const SearchApp = {
             }
         });
 
-        // Result Area Delegation (Images, Copy, Pagination)
         this.elements.resultsArea.addEventListener('click', (e) => this.handleResultClick(e));
         
-        // Sort/Filter Change
         this.elements.resultsArea.addEventListener('change', (e) => {
             if (e.target.id === 'sortSelect') {
                 this.state.currentSort = e.target.value;
@@ -302,7 +278,6 @@ const SearchApp = {
             }
         });
         
-        // Popstate
         window.addEventListener('popstate', (e) => {
             if (e.state && e.state.term) {
                 this.elements.input.value = e.state.term;
@@ -315,11 +290,9 @@ const SearchApp = {
 
     handleInputState() {
         const val = this.elements.input.value;
-        // Toggle Clear Button
         if (val.length > 0) this.elements.clearBtn.classList.remove('hidden');
         else this.elements.clearBtn.classList.add('hidden');
         
-        // Auto-Direction
         const isRTL = /[\u0600-\u06FF]/.test(val);
         this.elements.input.dir = isRTL || !val ? 'rtl' : 'ltr';
     },
@@ -336,10 +309,8 @@ const SearchApp = {
     },
 
     async performSearch(term, page = 1) {
-        // UI Updates
         this.elements.initialMsg.classList.add('hidden');
         
-        // Remove old results but keep skeleton ready
         const oldGrid = document.getElementById('resultsGrid');
         if (oldGrid) oldGrid.remove();
         const oldControls = document.getElementById('resultsControls');
@@ -347,11 +318,9 @@ const SearchApp = {
         const oldPag = document.querySelector('.pagination-nav');
         if(oldPag) oldPag.remove();
 
-        // Show Skeleton
         this.elements.skeleton.classList.remove('hidden');
-        this.elements.skeleton.classList.add('grid'); // Ensure grid display is active
+        this.elements.skeleton.classList.add('grid');
 
-        // Update URL
         const newUrl = `?Term=${encodeURIComponent(term)}&PageNumber=${page}`;
         window.history.pushState({ term, page }, '', newUrl);
 
@@ -379,7 +348,6 @@ const SearchApp = {
         const doc = parser.parseFromString(html, 'text/html');
         const rows = doc.querySelectorAll('.RowSearchSty');
         
-        // Hide Skeleton
         this.elements.skeleton.classList.add('hidden');
         this.elements.skeleton.classList.remove('grid');
 
@@ -388,7 +356,7 @@ const SearchApp = {
             return;
         }
 
-        // Extract Data
+        // Updated Data Extraction Logic
         this.state.results = Array.from(rows).map((row, idx) => {
             const data = {
                 id: idx,
@@ -399,16 +367,18 @@ const SearchApp = {
                 details: {}
             };
 
-            // Parse key-value pairs
+            // Enhanced parser for all fields
             row.querySelectorAll('.searchRow .col-lg-4, .searchRow .col-md-4').forEach(col => {
                 const label = col.querySelector('label')?.textContent.trim();
                 const val = col.querySelector('span, bdo')?.textContent.trim();
+                
                 if (label && val) {
                     if (label.includes('قیمت')) data.price = parseInt(val.replace(/,/g, '')) || 0;
                     if (label.includes('برند')) data.owner = val;
                     if (label.includes('کد ژنریک')) data.genericCode = val;
                     if (label.includes('فرآورده')) data.productCode = val;
-                    if (label.includes('بسته')) data.packaging = val;
+                    if (label.includes('بسته')) data.packaging = val; // Extracted Packaging
+                    if (label.includes('پروانه')) data.licenseHolder = val; // Extracted License Holder
                 }
             });
             return data;
@@ -452,11 +422,9 @@ const SearchApp = {
     },
 
     renderResultsGrid() {
-        // Remove existing grid
         const existing = document.getElementById('resultsGrid');
         if (existing) existing.remove();
 
-        // Filter & Sort
         let displayData = [...this.state.results];
         
         if (this.state.currentFilter !== 'all') {
@@ -467,7 +435,6 @@ const SearchApp = {
         if (this.state.currentSort === 'priceDesc') displayData.sort((a, b) => b.price - a.price);
         if (this.state.currentSort === 'alpha') displayData.sort((a, b) => a.titleFa.localeCompare(b.titleFa));
 
-        // Generate HTML
         const grid = document.createElement('div');
         grid.id = 'resultsGrid';
         grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in';
@@ -482,33 +449,55 @@ const SearchApp = {
                 grid.innerHTML += `
                 <div class="glass-panel bg-white/60 dark:bg-gray-800/60 rounded-2xl p-5 hover:transform hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-xl dark:shadow-none relative group flex flex-col h-full">
                     
+                    <!-- Top Bar: Brand Owner & Product Code Copy -->
                     <div class="flex items-start justify-between mb-4">
                         <span class="bg-blue-100 dark:bg-blue-900/50 text-primary-700 dark:text-blue-300 px-3 py-1 rounded-lg text-xs font-bold truncate max-w-[70%]">
                             ${item.owner || 'برند نامشخص'}
                         </span>
                         ${item.productCode ? `
-                        <button class="copy-btn text-gray-400 hover:text-primary-500 transition-colors" data-copy="${item.productCode}" title="کپی کد فرآورده">
+                        <button class="copy-btn text-gray-400 hover:text-primary-500 transition-colors" data-copy="${item.productCode}" title="کپی کد فرآورده: ${item.productCode}">
                             <i class="far fa-copy"></i>
                         </button>` : ''}
                     </div>
 
+                    <!-- Main Content Row -->
                     <div class="flex gap-4 mb-4">
+                        <!-- Image -->
                         <div class="w-24 h-24 flex-shrink-0 bg-white dark:bg-gray-700 rounded-xl p-1 shadow-sm flex items-center justify-center cursor-pointer image-trigger" data-url="${item.detailUrl}" data-title="${item.titleFa}">
                             ${hasImage 
                                 ? `<img src="${item.img}" class="w-full h-full object-contain hover:scale-105 transition-transform" loading="lazy" alt="${item.titleFa}">`
                                 : `<i class="fas fa-image text-3xl text-gray-300 dark:text-gray-600"></i>`
                             }
                         </div>
-                        <div class="flex-1 min-w-0">
+                        
+                        <!-- Details Column -->
+                        <div class="flex-1 min-w-0 flex flex-col justify-center">
                             <h3 class="font-bold text-gray-800 dark:text-white mb-1 line-clamp-2 leading-tight">${item.titleFa}</h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 font-sans dir-ltr truncate">${item.titleEn}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 font-sans dir-ltr truncate mb-2">${item.titleEn}</p>
                             
-                            <div class="mt-2 text-xs text-gray-500 flex flex-wrap gap-2">
-                                ${item.genericCode ? `<span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">Gen: ${item.genericCode}</span>` : ''}
+                            <!-- New Extra Info Section: Packaging & License Holder -->
+                            <div class="space-y-1 border-r-2 border-gray-200 dark:border-gray-600 pr-2 mr-1">
+                                ${item.packaging ? `
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 truncate" title="${item.packaging}">
+                                        <i class="fas fa-box-open ml-1 text-primary-500/70"></i>${item.packaging}
+                                    </p>` : ''}
+                                ${item.licenseHolder ? `
+                                    <p class="text-xs text-gray-600 dark:text-gray-400 truncate" title="${item.licenseHolder}">
+                                        <i class="fas fa-certificate ml-1 text-primary-500/70"></i>${item.licenseHolder}
+                                    </p>` : ''}
                             </div>
                         </div>
                     </div>
 
+                    <!-- Tags Row -->
+                    ${item.genericCode ? `
+                    <div class="mb-4 text-xs">
+                         <span class="inline-flex items-center bg-gray-100 dark:bg-gray-700/50 px-2 py-1 rounded text-gray-600 dark:text-gray-400">
+                            <span class="opacity-50 ml-1">کد ژنریک:</span> ${item.genericCode}
+                         </span>
+                    </div>` : ''}
+
+                    <!-- Bottom Bar: Price & Action -->
                     <div class="mt-auto pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
                         <div class="flex flex-col">
                             <span class="text-xs text-gray-500">قیمت مصرف کننده</span>
@@ -569,7 +558,6 @@ const SearchApp = {
     },
 
     renderEmptyState(doc) {
-        // Suggestions logic
         const suggestions = Array.from(doc.querySelectorAll('.titleNotFind a')).map(a => {
             return { text: a.textContent.trim(), term: getQueryParams(a.href).term };
         });
@@ -600,7 +588,6 @@ const SearchApp = {
     },
 
     async handleResultClick(e) {
-        // Image Modal Trigger
         const imgTrigger = e.target.closest('.image-trigger');
         if (imgTrigger) {
             const detailUrl = imgTrigger.dataset.url;
@@ -609,17 +596,15 @@ const SearchApp = {
             return;
         }
 
-        // Copy Button Trigger
         const copyBtn = e.target.closest('.copy-btn');
         if (copyBtn) {
             e.stopPropagation();
             const text = copyBtn.dataset.copy;
-            copyTextToClipboard(text, copyBtn.querySelector('i'));
+            copyTextToClipboard(text, copyBtn);
         }
     },
 
     async fetchAndShowGallery(detailUrl, title) {
-        // Show modal immediately with loading state
         ImageModal.show([], [], title);
         
         try {
@@ -628,7 +613,6 @@ const SearchApp = {
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
-            // Scrape images from Lightbox elements
             const links = doc.querySelectorAll('a[data-lightbox="image-1"]');
             let images = [];
             
@@ -637,13 +621,11 @@ const SearchApp = {
                 if (href) images.push(href.startsWith('http') ? href : this.baseUrl + href);
             });
             
-            // Remove duplicates (sometimes last one is duplicate)
             images = [...new Set(images)];
             
             if (images.length > 0) {
                 ImageModal.show(images, images, title, 0);
             } else {
-                // Keep modal open but show "No Image" state via built-in logic
                 ImageModal.loadImage(); 
             }
         } catch (e) {
@@ -653,12 +635,11 @@ const SearchApp = {
         }
     },
 
-    // --- History Management ---
     addToHistory(term) {
         let history = this.getHistory();
         history = history.filter(t => t !== term);
         history.unshift(term);
-        history = history.slice(0, 5); // Keep last 5
+        history = history.slice(0, 5);
         localStorage.setItem(this.storageKeys.history, JSON.stringify(history));
         this.renderHistory(history);
     },
@@ -695,7 +676,6 @@ const ThemeManager = {
     init() {
         if (!this.btn) return;
         
-        // Check saved or system preference
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -732,13 +712,8 @@ const BackToTop = {
     }
 };
 
-// --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
     ThemeManager.init();
     BackToTop.init();
-    
-    // Defer heavy logic slightly
-    setTimeout(() => {
-        SearchApp.init();
-    }, 10);
+    setTimeout(() => { SearchApp.init(); }, 10);
 });
