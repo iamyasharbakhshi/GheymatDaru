@@ -35,13 +35,11 @@ function toPersianDigits(str) {
 function translatePackaging(text) {
     if (!text) return '';
 
-    // 1. Normalize: Uppercase, replace non-breaking spaces with normal spaces
     let translated = text.toUpperCase().replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
 
-    // 2. Dictionary: Ordered by Length (Longest First) to prevent partial replacements
     const dict = [
         { en: 'WITH APPLICATOR', fa: 'همراه با اپلیکاتور' },
-        { en: 'BLISTER PACK', fa: 'بلیستر' }, // Simplified for better fit
+        { en: 'BLISTER PACK', fa: 'بلیستر' },
         { en: 'SUPPOSITORY', fa: 'شیاف' },
         { en: 'SUSPENSION', fa: 'سوسپانسیون' },
         { en: 'CARTRIDGE', fa: 'کارتریج' },
@@ -57,26 +55,24 @@ function translatePackaging(text) {
         { en: 'CARTON', fa: 'کارتن' },
         { en: 'CREAM', fa: 'کرم' },
         { en: 'SPRAY', fa: 'اسپری' },
-        { en: 'PACK', fa: 'بسته' }, // Will only match if BLISTER PACK/PACKAGE didn't match
+        { en: 'PACK', fa: 'بسته' },
         { en: 'DROP', fa: 'قطره' },
         { en: 'TUBE', fa: 'تیوپ' },
         { en: 'VIAL', fa: 'ویال' },
         { en: 'BOX', fa: 'جعبه' },
         { en: 'PEN', fa: 'قلم' },
         { en: 'GEL', fa: 'ژل' },
-        { en: ' IN ', fa: ' در ' }, // Spaces important
+        { en: ' IN ', fa: ' در ' },
         { en: ' OF ', fa: ' از ' },
         { en: ',', fa: '،' }
     ];
 
     dict.forEach(item => {
-        // Escape special regex characters if any
         const safeKey = item.en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(safeKey, 'gi');
         translated = translated.replace(regex, item.fa);
     });
 
-    // 3. Final cleanup and digit conversion
     return toPersianDigits(translated);
 }
 
@@ -352,7 +348,6 @@ const SearchApp = {
     resetView() {
         this.elements.initialMsg.classList.remove('hidden');
         this.elements.skeleton.classList.add('hidden');
-        // Clear all dynamic containers
         const containers = ['resultsControls', 'resultsGrid', 'resultsPagination'];
         containers.forEach(id => {
             const el = document.getElementById(id);
@@ -361,7 +356,6 @@ const SearchApp = {
     },
 
     setupResultContainers() {
-        // Ensure the order is always Controls -> Grid -> Pagination
         this.elements.resultsArea.innerHTML = '';
         
         const controls = document.createElement('div');
@@ -381,10 +375,7 @@ const SearchApp = {
 
     async performSearch(term, page = 1) {
         this.elements.initialMsg.classList.add('hidden');
-        
-        // Remove old view logic
         this.resetView(); 
-        
         this.elements.skeleton.classList.remove('hidden');
         this.elements.skeleton.classList.add('grid');
 
@@ -402,10 +393,32 @@ const SearchApp = {
         } catch (error) {
             console.error(error);
             this.elements.skeleton.classList.add('hidden');
+            
+            // SMART ERROR HANDLING LOGIC
+            let errorTitle = 'خطا در برقراری ارتباط';
+            let errorDesc = 'لطفاً اتصال اینترنت خود را بررسی کرده و دوباره تلاش کنید.';
+            let errorIcon = 'fa-wifi';
+            let errorClass = 'text-red-600 bg-red-50/50 dark:bg-red-900/20 border-red-200';
+
+            // Check if user is Online but request failed (Indicates VPN/Geo-block)
+            if (navigator.onLine) {
+                errorTitle = 'عدم دسترسی به سرور';
+                errorDesc = `
+                    <div class="space-y-2">
+                        <p class="font-bold">این سامانه تنها با آی‌پی (IP) ایران در دسترس است.</p>
+                        <p>لطفاً اگر <span class="text-red-600 font-bold dark:text-red-400">فیلترشکن (VPN)</span> شما روشن است، آن را خاموش کرده و صفحه را رفرش کنید.</p>
+                    </div>`;
+                errorIcon = 'fa-shield-alt';
+                errorClass = 'text-orange-700 bg-orange-50/80 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800';
+            }
+
             this.elements.resultsArea.innerHTML += `
-                <div class="glass-panel bg-red-50/50 dark:bg-red-900/20 border-red-200 p-6 rounded-2xl text-center text-red-600 animate-fade-in mt-4">
-                    <i class="fas fa-wifi text-4xl mb-3"></i>
-                    <p>خطا در برقراری ارتباط. لطفا اینترنت خود را بررسی کنید.</p>
+                <div class="glass-panel ${errorClass} p-8 rounded-3xl text-center animate-fade-in mt-4 border">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/50 dark:bg-black/20 mb-4">
+                        <i class="fas ${errorIcon} text-4xl opacity-80"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-3">${errorTitle}</h3>
+                    <div class="text-sm opacity-90 leading-relaxed">${errorDesc}</div>
                 </div>`;
         }
     },
@@ -444,7 +457,6 @@ const SearchApp = {
                     if (label.includes('برند')) data.owner = val;
                     if (label.includes('کد ژنریک')) data.genericCode = val;
                     if (label.includes('فرآورده')) data.productCode = val;
-                    // Apply translation logic here
                     if (label.includes('بسته')) data.packaging = translatePackaging(val);
                     if (label.includes('پروانه')) data.licenseHolder = val;
                 }
