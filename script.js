@@ -31,51 +31,52 @@ function toPersianDigits(str) {
     return str.toString().replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 }
 
-// Translate English Packaging text to Persian
+// --- Robust Translation Function ---
 function translatePackaging(text) {
     if (!text) return '';
-    
-    let translated = text.toUpperCase();
-    
-    // Dictionary of pharmaceutical terms
+
+    // 1. Normalize: Uppercase, replace non-breaking spaces with normal spaces
+    let translated = text.toUpperCase().replace(/\u00A0/g, ' ').replace(/\s+/g, ' ').trim();
+
+    // 2. Dictionary: Ordered by Length (Longest First) to prevent partial replacements
     const dict = [
-        { en: 'BLISTER PACK', fa: 'بلیستر (ورق)' },
-        { en: 'PACKAGE', fa: 'بسته' },
-        { en: 'PACK', fa: 'بسته' },
-        { en: 'BOX', fa: 'جعبه' },
-        { en: 'BOTTLE', fa: 'بطری' },
-        { en: 'CARTON', fa: 'کارتن' },
-        { en: 'TABLET', fa: 'قرص' },
-        { en: 'CAPSULE', fa: 'کپسول' },
-        { en: 'AMPULE', fa: 'آمپول' },
-        { en: 'VIAL', fa: 'ویال' },
+        { en: 'WITH APPLICATOR', fa: 'همراه با اپلیکاتور' },
+        { en: 'BLISTER PACK', fa: 'بلیستر' }, // Simplified for better fit
         { en: 'SUPPOSITORY', fa: 'شیاف' },
-        { en: 'TUBE', fa: 'تیوپ' },
-        { en: 'SYRINGE', fa: 'سرنگ' },
-        { en: 'PEN', fa: 'قلم' },
-        { en: 'SACHET', fa: 'ساشه' },
-        { en: 'DROP', fa: 'قطره' },
-        { en: 'SPRAY', fa: 'اسپری' },
-        { en: 'CREAM', fa: 'کرم' },
-        { en: 'OINTMENT', fa: 'پماد' },
-        { en: 'GEL', fa: 'ژل' },
-        { en: 'SOLUTION', fa: 'محلول' },
         { en: 'SUSPENSION', fa: 'سوسپانسیون' },
         { en: 'CARTRIDGE', fa: 'کارتریج' },
-        { en: 'WITH APPLICATOR', fa: 'همراه با اپلیکاتور' },
-        { en: 'WITH', fa: 'با' },
-        { en: ' IN ', fa: ' در ' }, // Spaces match exact word
-        { en: ' OF ', fa: ' از ' }
+        { en: 'SOLUTION', fa: 'محلول' },
+        { en: 'OINTMENT', fa: 'پماد' },
+        { en: 'CAPSULE', fa: 'کپسول' },
+        { en: 'INHALER', fa: 'اسپری تنفسی' },
+        { en: 'PACKAGE', fa: 'بسته' },
+        { en: 'AMPULE', fa: 'آمپول' },
+        { en: 'TABLET', fa: 'قرص' },
+        { en: 'SACHET', fa: 'ساشه' },
+        { en: 'BOTTLE', fa: 'بطری' },
+        { en: 'CARTON', fa: 'کارتن' },
+        { en: 'CREAM', fa: 'کرم' },
+        { en: 'SPRAY', fa: 'اسپری' },
+        { en: 'PACK', fa: 'بسته' }, // Will only match if BLISTER PACK/PACKAGE didn't match
+        { en: 'DROP', fa: 'قطره' },
+        { en: 'TUBE', fa: 'تیوپ' },
+        { en: 'VIAL', fa: 'ویال' },
+        { en: 'BOX', fa: 'جعبه' },
+        { en: 'PEN', fa: 'قلم' },
+        { en: 'GEL', fa: 'ژل' },
+        { en: ' IN ', fa: ' در ' }, // Spaces important
+        { en: ' OF ', fa: ' از ' },
+        { en: ',', fa: '،' }
     ];
 
-    // Replace words
     dict.forEach(item => {
-        // Use Regex to replace all occurrences case-insensitively
-        const regex = new RegExp(item.en, 'gi');
+        // Escape special regex characters if any
+        const safeKey = item.en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(safeKey, 'gi');
         translated = translated.replace(regex, item.fa);
     });
 
-    // Convert numbers to Persian
+    // 3. Final cleanup and digit conversion
     return toPersianDigits(translated);
 }
 
@@ -351,6 +352,7 @@ const SearchApp = {
     resetView() {
         this.elements.initialMsg.classList.remove('hidden');
         this.elements.skeleton.classList.add('hidden');
+        // Clear all dynamic containers
         const containers = ['resultsControls', 'resultsGrid', 'resultsPagination'];
         containers.forEach(id => {
             const el = document.getElementById(id);
@@ -359,6 +361,7 @@ const SearchApp = {
     },
 
     setupResultContainers() {
+        // Ensure the order is always Controls -> Grid -> Pagination
         this.elements.resultsArea.innerHTML = '';
         
         const controls = document.createElement('div');
@@ -378,7 +381,10 @@ const SearchApp = {
 
     async performSearch(term, page = 1) {
         this.elements.initialMsg.classList.add('hidden');
+        
+        // Remove old view logic
         this.resetView(); 
+        
         this.elements.skeleton.classList.remove('hidden');
         this.elements.skeleton.classList.add('grid');
 
@@ -438,7 +444,7 @@ const SearchApp = {
                     if (label.includes('برند')) data.owner = val;
                     if (label.includes('کد ژنریک')) data.genericCode = val;
                     if (label.includes('فرآورده')) data.productCode = val;
-                    // Apply translation to packaging
+                    // Apply translation logic here
                     if (label.includes('بسته')) data.packaging = translatePackaging(val);
                     if (label.includes('پروانه')) data.licenseHolder = val;
                 }
@@ -599,7 +605,6 @@ const SearchApp = {
             if (text === '>') content = '<i class="fas fa-angle-right"></i>';
             if (text === '<') content = '<i class="fas fa-angle-left"></i>';
             
-            // Convert numbers in pagination to Persian
             if (/^\d+$/.test(content)) content = toPersianDigits(content);
 
             const li = document.createElement('li');
