@@ -7,12 +7,12 @@ function getQueryParams(url) {
     try {
         const queryString = typeof url === 'string' ? url.split('?')[1] : null;
         if (!queryString && !(url instanceof URLSearchParams)) return params;
-        
+
         const urlParams = typeof url === 'string' ? new URLSearchParams(queryString) : url;
-        for (const [key, value] of urlParams) { 
-            params[key] = value; 
+        for (const [key, value] of urlParams) {
+            params[key] = value;
         }
-    } catch(e) { console.error("Error parsing query:", e); }
+    } catch (e) { console.error("Error parsing query:", e); }
     return params;
 }
 
@@ -29,11 +29,11 @@ function addCommas(nStr) {
 async function copyTextToClipboard(text, buttonElement) {
     try {
         await navigator.clipboard.writeText(text);
-        if(buttonElement){
+        if (buttonElement) {
             // Visual feedback
             const icon = buttonElement.querySelector('i') || buttonElement;
             const originalClass = icon.className;
-            
+
             icon.className = "fas fa-check text-green-500 scale-110 transition-transform";
             setTimeout(() => {
                 icon.className = originalClass;
@@ -46,7 +46,7 @@ async function copyTextToClipboard(text, buttonElement) {
 
 function debounce(func, wait) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
@@ -61,10 +61,10 @@ const ImageModal = {
     caption: null,
     closeBtn: null,
     miniMap: null,
-    
+
     currentImages: [],
     currentIndex: 0,
-    
+
     init() {
         this.overlay = document.getElementById('modalOverlay');
         this.backdrop = document.getElementById('modalBackdrop');
@@ -128,7 +128,7 @@ const ImageModal = {
 
     loadImage() {
         if (!this.currentImages.length) return;
-        
+
         const url = this.currentImages[this.currentIndex];
         this.spinner.style.display = 'flex';
         this.zoomedImage.style.opacity = '0.5';
@@ -161,8 +161,8 @@ const ImageModal = {
 
     updateNavButtons() {
         const show = this.currentImages.length > 1;
-        if(this.prevBtn) this.prevBtn.style.display = show ? 'flex' : 'none';
-        if(this.nextBtn) this.nextBtn.style.display = show ? 'flex' : 'none';
+        if (this.prevBtn) this.prevBtn.style.display = show ? 'flex' : 'none';
+        if (this.nextBtn) this.nextBtn.style.display = show ? 'flex' : 'none';
     },
 
     renderMiniMap(thumbnails) {
@@ -182,9 +182,9 @@ const ImageModal = {
         this.currentIndex = index;
         this.loadImage();
     },
-    
+
     highlightMiniMap() {
-        if(!this.miniMap) return;
+        if (!this.miniMap) return;
         const thumbs = this.miniMap.querySelectorAll('img');
         thumbs.forEach((t, i) => {
             if (i === this.currentIndex) {
@@ -204,9 +204,9 @@ const SearchApp = {
     baseUrl: 'https://irc.fda.gov.ir',
     endpoints: { search: '/nfi/Search' },
     storageKeys: { history: 'drugHistory_v2', theme: 'drugTheme' },
-    
+
     elements: {},
-    
+
     state: {
         results: [],
         currentSort: 'none',
@@ -228,7 +228,7 @@ const SearchApp = {
         ImageModal.init();
         this.loadHistory();
         this.bindEvents();
-        
+
         const params = getQueryParams(window.location.search);
         if (params.Term) {
             this.elements.input.value = decodeURIComponent(params.Term);
@@ -248,7 +248,7 @@ const SearchApp = {
         });
 
         this.elements.input.addEventListener('input', () => this.handleInputState());
-        
+
         this.elements.clearBtn.addEventListener('click', () => {
             this.elements.input.value = '';
             this.elements.input.focus();
@@ -267,7 +267,7 @@ const SearchApp = {
         });
 
         this.elements.resultsArea.addEventListener('click', (e) => this.handleResultClick(e));
-        
+
         this.elements.resultsArea.addEventListener('change', (e) => {
             if (e.target.id === 'sortSelect') {
                 this.state.currentSort = e.target.value;
@@ -277,7 +277,7 @@ const SearchApp = {
                 this.renderResultsGrid();
             }
         });
-        
+
         window.addEventListener('popstate', (e) => {
             if (e.state && e.state.term) {
                 this.elements.input.value = e.state.term;
@@ -292,7 +292,7 @@ const SearchApp = {
         const val = this.elements.input.value;
         if (val.length > 0) this.elements.clearBtn.classList.remove('hidden');
         else this.elements.clearBtn.classList.add('hidden');
-        
+
         const isRTL = /[\u0600-\u06FF]/.test(val);
         this.elements.input.dir = isRTL || !val ? 'rtl' : 'ltr';
     },
@@ -310,13 +310,13 @@ const SearchApp = {
 
     async performSearch(term, page = 1) {
         this.elements.initialMsg.classList.add('hidden');
-        
+
         const oldGrid = document.getElementById('resultsGrid');
         if (oldGrid) oldGrid.remove();
         const oldControls = document.getElementById('resultsControls');
         if (oldControls) oldControls.remove();
         const oldPag = document.querySelector('.pagination-nav');
-        if(oldPag) oldPag.remove();
+        if (oldPag) oldPag.remove();
 
         this.elements.skeleton.classList.remove('hidden');
         this.elements.skeleton.classList.add('grid');
@@ -328,7 +328,7 @@ const SearchApp = {
             const fetchUrl = `${this.baseUrl}${this.endpoints.search}?Term=${encodeURIComponent(term)}&PageNumber=${page}&PageSize=12`;
             const response = await fetch(fetchUrl);
             if (!response.ok) throw new Error('Network response was not ok');
-            
+
             const html = await response.text();
             this.parseAndRender(html, term, page);
 
@@ -347,7 +347,7 @@ const SearchApp = {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const rows = doc.querySelectorAll('.RowSearchSty');
-        
+
         this.elements.skeleton.classList.add('hidden');
         this.elements.skeleton.classList.remove('grid');
 
@@ -371,7 +371,7 @@ const SearchApp = {
             row.querySelectorAll('.searchRow .col-lg-4, .searchRow .col-md-4').forEach(col => {
                 const label = col.querySelector('label')?.textContent.trim();
                 const val = col.querySelector('span, bdo')?.textContent.trim();
-                
+
                 if (label && val) {
                     if (label.includes('قیمت')) data.price = parseInt(val.replace(/,/g, '')) || 0;
                     if (label.includes('برند')) data.owner = val;
@@ -391,7 +391,7 @@ const SearchApp = {
 
     renderControls() {
         const owners = [...new Set(this.state.results.map(r => r.owner).filter(Boolean))].sort();
-        
+
         const controlsHTML = `
             <div id="resultsControls" class="glass-panel bg-white/50 dark:bg-gray-800/50 p-4 rounded-2xl mb-6 flex flex-col sm:flex-row gap-4 animate-fade-in">
                 <div class="flex-1">
@@ -426,7 +426,7 @@ const SearchApp = {
         if (existing) existing.remove();
 
         let displayData = [...this.state.results];
-        
+
         if (this.state.currentFilter !== 'all') {
             displayData = displayData.filter(d => d.owner === this.state.currentFilter);
         }
@@ -437,7 +437,7 @@ const SearchApp = {
 
         const grid = document.createElement('div');
         grid.id = 'resultsGrid';
-        grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in';
+        grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in';
 
         if (displayData.length === 0) {
             grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">موردی با این فیلتر یافت نشد.</div>';
@@ -445,7 +445,7 @@ const SearchApp = {
             displayData.forEach(item => {
                 const priceFormatted = item.price ? addCommas(item.price) : 'نامشخص';
                 const hasImage = !!item.img;
-                
+
                 grid.innerHTML += `
                 <div class="glass-panel bg-white/60 dark:bg-gray-800/60 rounded-2xl p-5 hover:transform hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-xl dark:shadow-none relative group flex flex-col h-full">
                     
@@ -464,10 +464,10 @@ const SearchApp = {
                     <div class="flex gap-4 mb-4">
                         <!-- Image -->
                         <div class="w-24 h-24 flex-shrink-0 bg-white dark:bg-gray-700 rounded-xl p-1 shadow-sm flex items-center justify-center cursor-pointer image-trigger" data-url="${item.detailUrl}" data-title="${item.titleFa}">
-                            ${hasImage 
-                                ? `<img src="${item.img}" class="w-full h-full object-contain hover:scale-105 transition-transform" loading="lazy" alt="${item.titleFa}">`
-                                : `<i class="fas fa-image text-3xl text-gray-300 dark:text-gray-600"></i>`
-                            }
+                            ${hasImage
+                        ? `<img src="${item.img}" class="w-full h-full object-contain hover:scale-105 transition-transform" loading="lazy" alt="${item.titleFa}">`
+                        : `<i class="fas fa-image text-3xl text-gray-300 dark:text-gray-600"></i>`
+                    }
                         </div>
                         
                         <!-- Details Column -->
@@ -512,7 +512,7 @@ const SearchApp = {
                 </div>`;
             });
         }
-        
+
         this.elements.resultsArea.appendChild(grid);
     },
 
@@ -521,14 +521,14 @@ const SearchApp = {
 
         const nav = document.createElement('nav');
         nav.className = 'pagination-nav mt-10 flex justify-center';
-        
+
         const ul = document.createElement('ul');
         ul.className = 'flex flex-wrap gap-2 justify-center items-center p-2 bg-white/50 dark:bg-gray-800/50 rounded-2xl glass-panel';
 
         originalNav.querySelectorAll('li a').forEach(link => {
             const href = link.getAttribute('href');
             if (!href) return;
-            
+
             const params = getQueryParams(href);
             const pageNum = parseInt(params.PageNumber) || 1;
             const text = link.textContent.trim();
@@ -543,9 +543,9 @@ const SearchApp = {
             const li = document.createElement('li');
             li.innerHTML = `
                 <button class="w-10 h-10 flex items-center justify-center rounded-xl text-sm transition-all 
-                    ${isActive 
-                        ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/40 font-bold scale-110' 
-                        : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}"
+                    ${isActive
+                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/40 font-bold scale-110'
+                    : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}"
                     onclick="SearchApp.performSearch('${term}', ${pageNum})">
                     ${content}
                 </button>
@@ -606,27 +606,27 @@ const SearchApp = {
 
     async fetchAndShowGallery(detailUrl, title) {
         ImageModal.show([], [], title);
-        
+
         try {
             const res = await fetch(detailUrl);
             const html = await res.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-            
+
             const links = doc.querySelectorAll('a[data-lightbox="image-1"]');
             let images = [];
-            
+
             links.forEach(link => {
                 const href = link.getAttribute('href');
                 if (href) images.push(href.startsWith('http') ? href : this.baseUrl + href);
             });
-            
+
             images = [...new Set(images)];
-            
+
             if (images.length > 0) {
                 ImageModal.show(images, images, title, 0);
             } else {
-                ImageModal.loadImage(); 
+                ImageModal.loadImage();
             }
         } catch (e) {
             console.error('Gallery Fetch Error', e);
@@ -675,7 +675,7 @@ const ThemeManager = {
     btn: document.getElementById('themeToggleBtn'),
     init() {
         if (!this.btn) return;
-        
+
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -697,7 +697,7 @@ const ThemeManager = {
 const BackToTop = {
     btn: document.getElementById('backToTopBtn'),
     init() {
-        if(!this.btn) return;
+        if (!this.btn) return;
         window.addEventListener('scroll', debounce(() => {
             if (window.scrollY > 300) {
                 this.btn.classList.remove('translate-y-20', 'opacity-0');
@@ -705,7 +705,7 @@ const BackToTop = {
                 this.btn.classList.add('translate-y-20', 'opacity-0');
             }
         }, 50));
-        
+
         this.btn.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
