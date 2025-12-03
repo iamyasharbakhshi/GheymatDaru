@@ -7,12 +7,12 @@ function getQueryParams(url) {
     try {
         const queryString = typeof url === 'string' ? url.split('?')[1] : null;
         if (!queryString && !(url instanceof URLSearchParams)) return params;
-
+        
         const urlParams = typeof url === 'string' ? new URLSearchParams(queryString) : url;
-        for (const [key, value] of urlParams) {
-            params[key] = value;
+        for (const [key, value] of urlParams) { 
+            params[key] = value; 
         }
-    } catch (e) { console.error("Error parsing query:", e); }
+    } catch(e) { console.error("Error parsing query:", e); }
     return params;
 }
 
@@ -29,11 +29,9 @@ function addCommas(nStr) {
 async function copyTextToClipboard(text, buttonElement) {
     try {
         await navigator.clipboard.writeText(text);
-        if (buttonElement) {
-            // Visual feedback
+        if(buttonElement){
             const icon = buttonElement.querySelector('i') || buttonElement;
             const originalClass = icon.className;
-
             icon.className = "fas fa-check text-green-500 scale-110 transition-transform";
             setTimeout(() => {
                 icon.className = originalClass;
@@ -46,7 +44,7 @@ async function copyTextToClipboard(text, buttonElement) {
 
 function debounce(func, wait) {
     let timeout;
-    return function (...args) {
+    return function(...args) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
     };
@@ -61,10 +59,10 @@ const ImageModal = {
     caption: null,
     closeBtn: null,
     miniMap: null,
-
+    
     currentImages: [],
     currentIndex: 0,
-
+    
     init() {
         this.overlay = document.getElementById('modalOverlay');
         this.backdrop = document.getElementById('modalBackdrop');
@@ -128,7 +126,7 @@ const ImageModal = {
 
     loadImage() {
         if (!this.currentImages.length) return;
-
+        
         const url = this.currentImages[this.currentIndex];
         this.spinner.style.display = 'flex';
         this.zoomedImage.style.opacity = '0.5';
@@ -161,8 +159,8 @@ const ImageModal = {
 
     updateNavButtons() {
         const show = this.currentImages.length > 1;
-        if (this.prevBtn) this.prevBtn.style.display = show ? 'flex' : 'none';
-        if (this.nextBtn) this.nextBtn.style.display = show ? 'flex' : 'none';
+        if(this.prevBtn) this.prevBtn.style.display = show ? 'flex' : 'none';
+        if(this.nextBtn) this.nextBtn.style.display = show ? 'flex' : 'none';
     },
 
     renderMiniMap(thumbnails) {
@@ -182,9 +180,9 @@ const ImageModal = {
         this.currentIndex = index;
         this.loadImage();
     },
-
+    
     highlightMiniMap() {
-        if (!this.miniMap) return;
+        if(!this.miniMap) return;
         const thumbs = this.miniMap.querySelectorAll('img');
         thumbs.forEach((t, i) => {
             if (i === this.currentIndex) {
@@ -204,9 +202,9 @@ const SearchApp = {
     baseUrl: 'https://irc.fda.gov.ir',
     endpoints: { search: '/nfi/Search' },
     storageKeys: { history: 'drugHistory_v2', theme: 'drugTheme' },
-
+    
     elements: {},
-
+    
     state: {
         results: [],
         currentSort: 'none',
@@ -228,7 +226,7 @@ const SearchApp = {
         ImageModal.init();
         this.loadHistory();
         this.bindEvents();
-
+        
         const params = getQueryParams(window.location.search);
         if (params.Term) {
             this.elements.input.value = decodeURIComponent(params.Term);
@@ -248,7 +246,7 @@ const SearchApp = {
         });
 
         this.elements.input.addEventListener('input', () => this.handleInputState());
-
+        
         this.elements.clearBtn.addEventListener('click', () => {
             this.elements.input.value = '';
             this.elements.input.focus();
@@ -266,8 +264,10 @@ const SearchApp = {
             }
         });
 
+        // Use Delegation for static elements, but specialized for dynamic ones
         this.elements.resultsArea.addEventListener('click', (e) => this.handleResultClick(e));
-
+        
+        // Listen for filter/sort changes on the Results Area
         this.elements.resultsArea.addEventListener('change', (e) => {
             if (e.target.id === 'sortSelect') {
                 this.state.currentSort = e.target.value;
@@ -277,7 +277,7 @@ const SearchApp = {
                 this.renderResultsGrid();
             }
         });
-
+        
         window.addEventListener('popstate', (e) => {
             if (e.state && e.state.term) {
                 this.elements.input.value = e.state.term;
@@ -292,7 +292,7 @@ const SearchApp = {
         const val = this.elements.input.value;
         if (val.length > 0) this.elements.clearBtn.classList.remove('hidden');
         else this.elements.clearBtn.classList.add('hidden');
-
+        
         const isRTL = /[\u0600-\u06FF]/.test(val);
         this.elements.input.dir = isRTL || !val ? 'rtl' : 'ltr';
     },
@@ -300,23 +300,39 @@ const SearchApp = {
     resetView() {
         this.elements.initialMsg.classList.remove('hidden');
         this.elements.skeleton.classList.add('hidden');
-        const list = document.getElementById('resultsGrid');
-        const controls = document.getElementById('resultsControls');
-        const pagination = document.querySelector('.pagination-nav');
-        if (list) list.remove();
-        if (controls) controls.remove();
-        if (pagination) pagination.remove();
+        // Clear containers
+        const containers = ['resultsControls', 'resultsGrid', 'resultsPagination'];
+        containers.forEach(id => {
+            const el = document.getElementById(id);
+            if(el) el.remove();
+        });
+    },
+
+    // Create persistent containers to ensure order: Controls -> Grid -> Pagination
+    setupResultContainers() {
+        this.elements.resultsArea.innerHTML = '';
+        
+        const controls = document.createElement('div');
+        controls.id = 'resultsControls';
+        
+        const grid = document.createElement('div');
+        grid.id = 'resultsGrid';
+        grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in';
+        
+        const pagination = document.createElement('div');
+        pagination.id = 'resultsPagination';
+        
+        this.elements.resultsArea.appendChild(controls);
+        this.elements.resultsArea.appendChild(grid);
+        this.elements.resultsArea.appendChild(pagination);
     },
 
     async performSearch(term, page = 1) {
         this.elements.initialMsg.classList.add('hidden');
-
-        const oldGrid = document.getElementById('resultsGrid');
-        if (oldGrid) oldGrid.remove();
-        const oldControls = document.getElementById('resultsControls');
-        if (oldControls) oldControls.remove();
-        const oldPag = document.querySelector('.pagination-nav');
-        if (oldPag) oldPag.remove();
+        
+        // Clear previous results view but keep structure if possible, 
+        // or just rebuild. Rebuilding is safer for the skeleton logic.
+        this.resetView(); 
 
         this.elements.skeleton.classList.remove('hidden');
         this.elements.skeleton.classList.add('grid');
@@ -328,7 +344,7 @@ const SearchApp = {
             const fetchUrl = `${this.baseUrl}${this.endpoints.search}?Term=${encodeURIComponent(term)}&PageNumber=${page}&PageSize=12`;
             const response = await fetch(fetchUrl);
             if (!response.ok) throw new Error('Network response was not ok');
-
+            
             const html = await response.text();
             this.parseAndRender(html, term, page);
 
@@ -347,7 +363,7 @@ const SearchApp = {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
         const rows = doc.querySelectorAll('.RowSearchSty');
-
+        
         this.elements.skeleton.classList.add('hidden');
         this.elements.skeleton.classList.remove('grid');
 
@@ -356,7 +372,9 @@ const SearchApp = {
             return;
         }
 
-        // Updated Data Extraction Logic
+        // Initialize Layout Containers
+        this.setupResultContainers();
+
         this.state.results = Array.from(rows).map((row, idx) => {
             const data = {
                 id: idx,
@@ -367,18 +385,17 @@ const SearchApp = {
                 details: {}
             };
 
-            // Enhanced parser for all fields
             row.querySelectorAll('.searchRow .col-lg-4, .searchRow .col-md-4').forEach(col => {
                 const label = col.querySelector('label')?.textContent.trim();
                 const val = col.querySelector('span, bdo')?.textContent.trim();
-
+                
                 if (label && val) {
                     if (label.includes('قیمت')) data.price = parseInt(val.replace(/,/g, '')) || 0;
                     if (label.includes('برند')) data.owner = val;
                     if (label.includes('کد ژنریک')) data.genericCode = val;
                     if (label.includes('فرآورده')) data.productCode = val;
-                    if (label.includes('بسته')) data.packaging = val; // Extracted Packaging
-                    if (label.includes('پروانه')) data.licenseHolder = val; // Extracted License Holder
+                    if (label.includes('بسته')) data.packaging = val;
+                    if (label.includes('پروانه')) data.licenseHolder = val;
                 }
             });
             return data;
@@ -391,9 +408,10 @@ const SearchApp = {
 
     renderControls() {
         const owners = [...new Set(this.state.results.map(r => r.owner).filter(Boolean))].sort();
-
-        const controlsHTML = `
-            <div id="resultsControls" class="glass-panel bg-white/50 dark:bg-gray-800/50 p-4 rounded-2xl mb-6 flex flex-col sm:flex-row gap-4 animate-fade-in">
+        const container = document.getElementById('resultsControls');
+        
+        container.innerHTML = `
+            <div class="glass-panel bg-white/50 dark:bg-gray-800/50 p-4 rounded-2xl mb-6 flex flex-col sm:flex-row gap-4 animate-fade-in">
                 <div class="flex-1">
                     <label class="text-xs text-gray-500 mb-1 block px-1">مرتب‌سازی</label>
                     <div class="relative">
@@ -418,15 +436,20 @@ const SearchApp = {
                 </div>
             </div>
         `;
-        this.elements.resultsArea.insertAdjacentHTML('beforeend', controlsHTML);
+        
+        // Restore previous selection if re-rendering (not fully implemented for simplicty, but good practice)
+        if(this.state.currentSort !== 'none') document.getElementById('sortSelect').value = this.state.currentSort;
+        if(this.state.currentFilter !== 'all') document.getElementById('filterSelect').value = this.state.currentFilter;
     },
 
     renderResultsGrid() {
-        const existing = document.getElementById('resultsGrid');
-        if (existing) existing.remove();
+        const grid = document.getElementById('resultsGrid');
+        if (!grid) return; // Should not happen given setupResultContainers
+
+        grid.innerHTML = ''; // Clear content, keep container in place
 
         let displayData = [...this.state.results];
-
+        
         if (this.state.currentFilter !== 'all') {
             displayData = displayData.filter(d => d.owner === this.state.currentFilter);
         }
@@ -435,21 +458,19 @@ const SearchApp = {
         if (this.state.currentSort === 'priceDesc') displayData.sort((a, b) => b.price - a.price);
         if (this.state.currentSort === 'alpha') displayData.sort((a, b) => a.titleFa.localeCompare(b.titleFa));
 
-        const grid = document.createElement('div');
-        grid.id = 'resultsGrid';
-        grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in';
-
         if (displayData.length === 0) {
             grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">موردی با این فیلتر یافت نشد.</div>';
         } else {
+            // Use DocumentFragment for performance
+            const frag = document.createDocumentFragment();
+            
             displayData.forEach(item => {
                 const priceFormatted = item.price ? addCommas(item.price) : 'نامشخص';
                 const hasImage = !!item.img;
-
-                grid.innerHTML += `
-                <div class="glass-panel bg-white/60 dark:bg-gray-800/60 rounded-2xl p-5 hover:transform hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-xl dark:shadow-none relative group flex flex-col h-full">
-                    
-                    <!-- Top Bar: Brand Owner & Product Code Copy -->
+                
+                const card = document.createElement('div');
+                card.className = "glass-panel bg-white/60 dark:bg-gray-800/60 rounded-2xl p-5 hover:transform hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-xl dark:shadow-none relative group flex flex-col h-full";
+                card.innerHTML = `
                     <div class="flex items-start justify-between mb-4">
                         <span class="bg-blue-100 dark:bg-blue-900/50 text-primary-700 dark:text-blue-300 px-3 py-1 rounded-lg text-xs font-bold truncate max-w-[70%]">
                             ${item.owner || 'برند نامشخص'}
@@ -460,22 +481,18 @@ const SearchApp = {
                         </button>` : ''}
                     </div>
 
-                    <!-- Main Content Row -->
                     <div class="flex gap-4 mb-4">
-                        <!-- Image -->
                         <div class="w-24 h-24 flex-shrink-0 bg-white dark:bg-gray-700 rounded-xl p-1 shadow-sm flex items-center justify-center cursor-pointer image-trigger" data-url="${item.detailUrl}" data-title="${item.titleFa}">
-                            ${hasImage
-                        ? `<img src="${item.img}" class="w-full h-full object-contain hover:scale-105 transition-transform" loading="lazy" alt="${item.titleFa}">`
-                        : `<i class="fas fa-image text-3xl text-gray-300 dark:text-gray-600"></i>`
-                    }
+                            ${hasImage 
+                                ? `<img src="${item.img}" class="w-full h-full object-contain hover:scale-105 transition-transform" loading="lazy" alt="${item.titleFa}">`
+                                : `<i class="fas fa-image text-3xl text-gray-300 dark:text-gray-600"></i>`
+                            }
                         </div>
                         
-                        <!-- Details Column -->
                         <div class="flex-1 min-w-0 flex flex-col justify-center">
                             <h3 class="font-bold text-gray-800 dark:text-white mb-1 line-clamp-2 leading-tight">${item.titleFa}</h3>
                             <p class="text-xs text-gray-500 dark:text-gray-400 font-sans dir-ltr truncate mb-2">${item.titleEn}</p>
                             
-                            <!-- New Extra Info Section: Packaging & License Holder -->
                             <div class="space-y-1 border-r-2 border-gray-200 dark:border-gray-600 pr-2 mr-1">
                                 ${item.packaging ? `
                                     <p class="text-xs text-gray-600 dark:text-gray-400 truncate" title="${item.packaging}">
@@ -489,7 +506,6 @@ const SearchApp = {
                         </div>
                     </div>
 
-                    <!-- Tags Row -->
                     ${item.genericCode ? `
                     <div class="mb-4 text-xs">
                          <span class="inline-flex items-center bg-gray-100 dark:bg-gray-700/50 px-2 py-1 rounded text-gray-600 dark:text-gray-400">
@@ -497,7 +513,6 @@ const SearchApp = {
                          </span>
                     </div>` : ''}
 
-                    <!-- Bottom Bar: Price & Action -->
                     <div class="mt-auto pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
                         <div class="flex flex-col">
                             <span class="text-xs text-gray-500">قیمت مصرف کننده</span>
@@ -509,26 +524,27 @@ const SearchApp = {
                             <i class="fas fa-arrow-left"></i>
                         </a>
                     </div>
-                </div>`;
+                `;
+                frag.appendChild(card);
             });
+            grid.appendChild(frag);
         }
-
-        this.elements.resultsArea.appendChild(grid);
     },
 
     renderPagination(originalNav, currentPage, term) {
         if (!originalNav) return;
-
+        const container = document.getElementById('resultsPagination');
+        
         const nav = document.createElement('nav');
         nav.className = 'pagination-nav mt-10 flex justify-center';
-
+        
         const ul = document.createElement('ul');
         ul.className = 'flex flex-wrap gap-2 justify-center items-center p-2 bg-white/50 dark:bg-gray-800/50 rounded-2xl glass-panel';
 
         originalNav.querySelectorAll('li a').forEach(link => {
             const href = link.getAttribute('href');
             if (!href) return;
-
+            
             const params = getQueryParams(href);
             const pageNum = parseInt(params.PageNumber) || 1;
             const text = link.textContent.trim();
@@ -541,20 +557,28 @@ const SearchApp = {
             if (text === '<') content = '<i class="fas fa-angle-left"></i>';
 
             const li = document.createElement('li');
-            li.innerHTML = `
-                <button class="w-10 h-10 flex items-center justify-center rounded-xl text-sm transition-all 
-                    ${isActive
-                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/40 font-bold scale-110'
-                    : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'}"
-                    onclick="SearchApp.performSearch('${term}', ${pageNum})">
-                    ${content}
-                </button>
-            `;
+            const btn = document.createElement('button');
+            
+            btn.className = `w-10 h-10 flex items-center justify-center rounded-xl text-sm transition-all ${
+                isActive 
+                ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/40 font-bold scale-110' 
+                : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
+            }`;
+            btn.innerHTML = content;
+            
+            // Fix: Add event listener programmatically instead of onclick string
+            btn.addEventListener('click', () => {
+                this.performSearch(term, pageNum);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            li.appendChild(btn);
             ul.appendChild(li);
         });
 
         nav.appendChild(ul);
-        this.elements.resultsArea.appendChild(nav);
+        container.innerHTML = ''; // Clear existing pagination if any
+        container.appendChild(nav);
     },
 
     renderEmptyState(doc) {
@@ -575,8 +599,7 @@ const SearchApp = {
                     <div class="flex flex-wrap gap-2 justify-center">
                         <span class="w-full text-sm text-gray-400 mb-2">پیشنهادات:</span>
                         ${suggestions.map(s => `
-                            <button onclick="document.getElementById('Term').value='${s.text}'; SearchApp.performSearch('${s.text}')" 
-                                class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full text-sm hover:border-primary-500 hover:text-primary-500 transition-colors shadow-sm">
+                            <button class="suggestion-btn px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full text-sm hover:border-primary-500 hover:text-primary-500 transition-colors shadow-sm" data-term="${s.text}">
                                 ${s.text}
                             </button>
                         `).join('')}
@@ -584,7 +607,16 @@ const SearchApp = {
                 ` : ''}
             </div>
         `;
-        this.elements.resultsArea.insertAdjacentHTML('beforeend', html);
+        this.elements.resultsArea.innerHTML = html;
+
+        // Attach suggestion listeners
+        this.elements.resultsArea.querySelectorAll('.suggestion-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const t = btn.dataset.term;
+                this.elements.input.value = t;
+                this.performSearch(t);
+            });
+        });
     },
 
     async handleResultClick(e) {
@@ -606,27 +638,27 @@ const SearchApp = {
 
     async fetchAndShowGallery(detailUrl, title) {
         ImageModal.show([], [], title);
-
+        
         try {
             const res = await fetch(detailUrl);
             const html = await res.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
-
+            
             const links = doc.querySelectorAll('a[data-lightbox="image-1"]');
             let images = [];
-
+            
             links.forEach(link => {
                 const href = link.getAttribute('href');
                 if (href) images.push(href.startsWith('http') ? href : this.baseUrl + href);
             });
-
+            
             images = [...new Set(images)];
-
+            
             if (images.length > 0) {
                 ImageModal.show(images, images, title, 0);
             } else {
-                ImageModal.loadImage();
+                ImageModal.loadImage(); 
             }
         } catch (e) {
             console.error('Gallery Fetch Error', e);
@@ -675,7 +707,7 @@ const ThemeManager = {
     btn: document.getElementById('themeToggleBtn'),
     init() {
         if (!this.btn) return;
-
+        
         if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -697,7 +729,7 @@ const ThemeManager = {
 const BackToTop = {
     btn: document.getElementById('backToTopBtn'),
     init() {
-        if (!this.btn) return;
+        if(!this.btn) return;
         window.addEventListener('scroll', debounce(() => {
             if (window.scrollY > 300) {
                 this.btn.classList.remove('translate-y-20', 'opacity-0');
@@ -705,7 +737,7 @@ const BackToTop = {
                 this.btn.classList.add('translate-y-20', 'opacity-0');
             }
         }, 50));
-
+        
         this.btn.addEventListener('click', () => {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
