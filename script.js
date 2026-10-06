@@ -17,7 +17,8 @@ function getQueryParams(url) {
 }
 
 function addCommas(nStr) {
-    nStr = String(nStr);
+    if (!nStr) return '۰';
+    nStr = String(nStr).replace(/,/g, '');
     const x = nStr.split('.');
     let x1 = x[0];
     const x2 = x.length > 1 ? '.' + x[1] : '';
@@ -27,11 +28,10 @@ function addCommas(nStr) {
 }
 
 function toPersianDigits(str) {
-    if (!str) return '';
+    if (str === null || str === undefined) return '';
     return str.toString().replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 }
 
-// --- Robust Translation Function ---
 function translatePackaging(text) {
     if (!text) return '';
 
@@ -40,8 +40,8 @@ function translatePackaging(text) {
     const dict = [
         { en: 'WITH APPLICATOR', fa: 'همراه با اپلیکاتور' },
         { en: 'BLISTER PACK', fa: 'بلیستر' },
-        { en: 'SUPPOSITORY', fa: 'شیاف' },
         { en: 'SUSPENSION', fa: 'سوسپانسیون' },
+        { en: 'SUPPOSITORY', fa: 'شیاف' },
         { en: 'CARTRIDGE', fa: 'کارتریج' },
         { en: 'SOLUTION', fa: 'محلول' },
         { en: 'OINTMENT', fa: 'پماد' },
@@ -57,7 +57,7 @@ function translatePackaging(text) {
         { en: 'SPRAY', fa: 'اسپری' },
         { en: 'PACK', fa: 'بسته' },
         { en: 'DROP', fa: 'قطره' },
-        { en: 'TUBE', fa: 'تیوپ' },
+        { en: 'TUBE', fa: 'تیوب' },
         { en: 'VIAL', fa: 'ویال' },
         { en: 'BOX', fa: 'جعبه' },
         { en: 'PEN', fa: 'قلم' },
@@ -79,10 +79,10 @@ function translatePackaging(text) {
 async function copyTextToClipboard(text, buttonElement) {
     try {
         await navigator.clipboard.writeText(text);
-        if(buttonElement){
+        if (buttonElement) {
             const icon = buttonElement.querySelector('i') || buttonElement;
             const originalClass = icon.className;
-            icon.className = "fas fa-check text-green-500 scale-110 transition-transform";
+            icon.className = "fa-solid fa-check text-emerald-500 scale-110 transition-transform";
             setTimeout(() => {
                 icon.className = originalClass;
             }, 1500);
@@ -137,10 +137,11 @@ const ImageModal = {
         this.nextBtn?.addEventListener('click', (e) => { e.stopPropagation(); this.nav(1); });
 
         document.addEventListener('keydown', (e) => {
-            if (this.overlay.classList.contains('hidden')) return;
-            if (e.key === 'Escape') this.hide();
-            if (e.key === 'ArrowLeft') this.nav(-1);
-            if (e.key === 'ArrowRight') this.nav(1);
+            if (this.overlay && !this.overlay.classList.contains('hidden')) {
+                if (e.key === 'Escape') this.hide();
+                if (e.key === 'ArrowLeft') this.nav(-1);
+                if (e.key === 'ArrowRight') this.nav(1);
+            }
         });
     },
 
@@ -163,13 +164,16 @@ const ImageModal = {
     },
 
     hide() {
+        if (!this.overlay) return;
         this.backdrop.classList.add('opacity-0');
         this.panel.classList.remove('opacity-100', 'scale-100');
         this.panel.classList.add('opacity-0', 'scale-95');
 
         setTimeout(() => {
             this.overlay.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
+            if (DrugDetailModal.modal.classList.contains('hidden')) {
+                document.body.classList.remove('overflow-hidden');
+            }
             this.zoomedImage.src = '';
         }, 300);
     },
@@ -204,7 +208,7 @@ const ImageModal = {
     },
 
     updateCaption() {
-        this.caption.textContent = `${this.title} (${this.currentIndex + 1} از ${this.currentImages.length})`;
+        this.caption.textContent = `${this.title} (${toPersianDigits(this.currentIndex + 1)} از ${toPersianDigits(this.currentImages.length)})`;
     },
 
     updateNavButtons() {
@@ -221,7 +225,7 @@ const ImageModal = {
         this.miniMap.classList.remove('hidden');
         this.miniMap.innerHTML = thumbnails.map((src, i) => `
             <img src="${src}" data-idx="${i}" 
-                 class="h-12 w-12 object-cover rounded-md cursor-pointer border-2 transition-all ${i === this.currentIndex ? 'border-primary-500 scale-110' : 'border-transparent opacity-70 hover:opacity-100'}" 
+                 class="h-12 w-12 object-cover rounded-md cursor-pointer border-2 transition-all ${i === this.currentIndex ? 'border-brand-500 scale-105' : 'border-transparent opacity-70 hover:opacity-100'}" 
                  onclick="ImageModal.jump(${i})">
         `).join('');
     },
@@ -236,13 +240,382 @@ const ImageModal = {
         const thumbs = this.miniMap.querySelectorAll('img');
         thumbs.forEach((t, i) => {
             if (i === this.currentIndex) {
-                t.classList.add('border-primary-500', 'scale-110');
+                t.classList.add('border-brand-500', 'scale-105');
                 t.classList.remove('border-transparent', 'opacity-70');
                 t.scrollIntoView({ behavior: 'smooth', inline: 'center' });
             } else {
-                t.classList.remove('border-primary-500', 'scale-110');
+                t.classList.remove('border-brand-500', 'scale-105');
                 t.classList.add('border-transparent', 'opacity-70');
             }
+        });
+    }
+};
+
+// --- In-App Drug Detail Modal & Parser ---
+const DrugDetailModal = {
+    modal: null,
+    backdrop: null,
+    panel: null,
+    content: null,
+    title: null,
+    closeBtn: null,
+    baseUrl: 'https://irc.ttac.ir',
+
+    init() {
+        this.modal = document.getElementById('drugDetailModal');
+        this.backdrop = document.getElementById('drugDetailBackdrop');
+        this.panel = document.getElementById('drugDetailPanel');
+        this.content = document.getElementById('drugDetailContent');
+        this.title = document.getElementById('drugDetailTitle');
+        this.closeBtn = document.getElementById('closeDrugDetailModal');
+
+        if (!this.modal) return;
+
+        this.closeBtn?.addEventListener('click', () => this.hide());
+        this.backdrop?.addEventListener('click', () => this.hide());
+        
+        document.addEventListener('keydown', (e) => {
+            if (!this.modal.classList.contains('hidden') && e.key === 'Escape') {
+                this.hide();
+            }
+        });
+    },
+
+    showLoading(drugName) {
+        this.title.textContent = drugName || 'در حال بارگذاری اطلاعات دارو...';
+        this.content.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-20 text-slate-400">
+                <div class="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                <p class="font-medium text-sm">در حال دریافت و تحلیل اطلاعات کامل دارو...</p>
+            </div>
+        `;
+        this.modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        requestAnimationFrame(() => {
+            this.backdrop.classList.remove('opacity-0');
+            this.panel.classList.remove('opacity-0', 'scale-95');
+            this.panel.classList.add('opacity-100', 'scale-100');
+        });
+    },
+
+    hide() {
+        if (!this.modal) return;
+        this.backdrop.classList.add('opacity-0');
+        this.panel.classList.remove('opacity-100', 'scale-100');
+        this.panel.classList.add('opacity-0', 'scale-95');
+
+        setTimeout(() => {
+            this.modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }, 300);
+    },
+
+    async open(detailUrl, fallbackTitle) {
+        this.showLoading(fallbackTitle);
+
+        try {
+            const res = await fetch(detailUrl);
+            if (!res.ok) throw new Error('خطا در دریافت صفحه جزئیات');
+            const html = await res.text();
+            this.parseAndRender(html, fallbackTitle);
+        } catch (err) {
+            console.error(err);
+            this.content.innerHTML = `
+                <div class="p-8 text-center bg-rose-50 dark:bg-rose-950/20 rounded-2xl border border-rose-200 dark:border-rose-800">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-500 text-3xl mb-3"></i>
+                    <h4 class="font-bold text-rose-800 dark:text-rose-200">خطا در بارگذاری جزئیات</h4>
+                    <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">لطفاً اتصال اینترنت یا وضعیت فیلترشکن خود را بررسی کرده و مجدداً تلاش نمایید.</p>
+                </div>
+            `;
+        }
+    },
+
+    parseAndRender(html, fallbackTitle) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        // Helper to grab labels & values cleanly
+        const getFieldValue = (labelText) => {
+            const labels = Array.from(doc.querySelectorAll('label'));
+            const target = labels.find(l => l.textContent.includes(labelText));
+            if (!target) return null;
+            const container = target.closest('div');
+            if (!container) return null;
+            const valEl = container.querySelector('span, bdo');
+            return valEl ? valEl.textContent.trim() : null;
+        };
+
+        const data = {
+            nameFa: fallbackTitle || '',
+            nameEn: getFieldValue('نام :') || '',
+            genericName: getFieldValue('نام عمومی :') || '',
+            dosageForm: getFieldValue('شکل دارویی :') || '',
+            route: getFieldValue('نحوه مصرف :') || '',
+            brandOwner: getFieldValue('صاحب برند :') || '',
+            licenseHolder: getFieldValue('صاحب پروانه :') || '',
+            manufacturer: getFieldValue('تولید کننده :') || '',
+            expirationDate: getFieldValue('تاریخ اعتبار پروانه :') || '',
+            packagePrice: getFieldValue('قیمت مصرف کننده هر بسته') || '',
+            unitPrice: getFieldValue('قیمت واحد') || '',
+            gtin: getFieldValue('GTIN') || '',
+            irc: getFieldValue('IRC') || '',
+            packageCount: getFieldValue('تعداد در بسته') || '',
+            activeIngredients: getFieldValue('ترکیبات') || '',
+            indications: '',
+            mechanism: '',
+            pharmacokinetics: '',
+            warnings: '',
+            sideEffects: '',
+            interactions: '',
+            advice: '',
+            atcTree: [],
+            galleryImages: [],
+            similarProducts: []
+        };
+
+        // Text Info Sections
+        const textBlocks = doc.querySelectorAll('.paddingSearchTXT');
+        textBlocks.forEach(block => {
+            const label = block.querySelector('label')?.textContent.trim() || '';
+            const val = block.querySelector('.txtSearch1')?.textContent.trim() || '';
+            if (label.includes('موارد مصرف')) data.indications = val;
+            if (label.includes('مکانیسم اثر')) data.mechanism = val;
+            if (label.includes('فارماکوکینتیک')) data.pharmacokinetics = val;
+            if (label.includes('هشدارها')) data.warnings = val;
+            if (label.includes('عوارض جانبی')) data.sideEffects = val;
+            if (label.includes('تداخل های دارویی')) data.interactions = val;
+            if (label.includes('نکات قابل توصیه')) data.advice = val;
+        });
+
+        // ATC Hierarchy
+        const atcRows = doc.querySelectorAll('.graphBox');
+        atcRows.forEach(row => {
+            const code = row.querySelector('.txtEnglish-ltr1 a')?.textContent.trim() || '';
+            const desc = row.querySelector('.colorMediumPurple a')?.textContent.trim() || '';
+            if (code && desc) {
+                data.atcTree.push({ code, desc });
+            }
+        });
+
+        // Gallery Packaging / Appearance Images
+        const imgLinks = doc.querySelectorAll('a[data-lightbox="image-1"]');
+        imgLinks.forEach(a => {
+            const href = a.getAttribute('href');
+            if (href && !href.includes('chem.nlm.nih.gov')) {
+                data.galleryImages.push(href.startsWith('http') ? href : this.baseUrl + href);
+            }
+        });
+        data.galleryImages = [...new Set(data.galleryImages)];
+
+        // Similar Products Table
+        const similarRows = doc.querySelectorAll('.table tbody tr');
+        similarRows.forEach(tr => {
+            const tds = tr.querySelectorAll('td');
+            if (tds.length >= 5) {
+                const link = tds[1].querySelector('a');
+                const name = link ? link.textContent.trim() : tds[1].textContent.trim();
+                const detailHref = link ? (this.baseUrl + link.getAttribute('href')) : '';
+                const brandOwner = tds[2]?.textContent.trim() || '';
+                const licensee = tds[4]?.textContent.trim() || '';
+                data.similarProducts.push({ name, detailHref, brandOwner, licensee });
+            }
+        });
+
+        this.title.textContent = data.nameEn ? `${data.nameFa} (${data.nameEn})` : data.nameFa;
+
+        // Construct Rich Modern Template
+        this.content.innerHTML = `
+            <!-- Top Banner Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Price Box -->
+                <div class="p-5 rounded-2xl bg-gradient-to-br from-brand-50 to-emerald-100/50 dark:from-brand-950/40 dark:to-emerald-900/10 border border-brand-200 dark:border-brand-800/60 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-semibold text-brand-700 dark:text-brand-400 block mb-1">قیمت مصوب مصرف‌کننده (بسته)</span>
+                        <div class="text-2xl font-black text-brand-900 dark:text-emerald-300">
+                            ${toPersianDigits(addCommas(data.packagePrice))} <span class="text-xs font-medium">ریال</span>
+                        </div>
+                    </div>
+                    ${data.unitPrice ? `
+                    <div class="text-left border-r border-brand-200 dark:border-brand-800/60 pr-4">
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 block">قیمت واحد</span>
+                        <span class="text-base font-bold text-slate-700 dark:text-slate-300">${toPersianDigits(addCommas(data.unitPrice))} <span class="text-[10px]">ریال</span></span>
+                    </div>` : ''}
+                </div>
+
+                <!-- Generic Box -->
+                <div class="p-5 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 flex flex-col justify-center">
+                    <span class="text-xs text-slate-400 font-medium mb-1">نام عمومی و قدرت دارویی</span>
+                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100 dir-ltr text-right select-all truncate" title="${data.genericName}">
+                        ${data.genericName || 'ثبت نشده'}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Specifications Grid -->
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-brand-500"></i> مشخصات فنی و تجاری دارو
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
+                    <div class="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800">
+                        <span class="text-slate-400 block mb-1">شکل دارویی و نحوه مصرف</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200 dir-ltr text-right block">${data.dosageForm} - ${data.route}</span>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800">
+                        <span class="text-slate-400 block mb-1">صاحب نام تجاری (برند)</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate block">${data.brandOwner || '—'}</span>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800">
+                        <span class="text-slate-400 block mb-1">صاحب پروانه / تولید کننده</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200 truncate block">${data.manufacturer || data.licenseHolder || '—'}</span>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800">
+                        <span class="text-slate-400 block mb-1">بسته‌بندی</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200 block truncate" title="${data.packageCount}">${translatePackaging(data.packageCount) || data.packageCount || '—'}</span>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800">
+                        <span class="text-slate-400 block mb-1">شناسه تجاری (GTIN)</span>
+                        <span class="font-mono font-bold text-slate-800 dark:text-slate-200 select-all block">${toPersianDigits(data.gtin) || '—'}</span>
+                    </div>
+                    <div class="p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800">
+                        <span class="text-slate-400 block mb-1">کد ثبت فرآورده (IRC)</span>
+                        <span class="font-mono font-bold text-slate-800 dark:text-slate-200 select-all block">${toPersianDigits(data.irc) || '—'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Packaging & Appearance Images -->
+            ${data.galleryImages.length > 0 ? `
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-camera text-brand-500"></i> تصاویر بسته بندی و شکل ظاهری دارو
+                </h3>
+                <div class="flex gap-3 overflow-x-auto pb-2">
+                    ${data.galleryImages.map((src, i) => `
+                        <div class="w-28 h-28 flex-shrink-0 bg-slate-100 dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-2 cursor-pointer hover:border-brand-500 transition-all flex items-center justify-center detail-img-trigger" data-idx="${i}">
+                            <img src="${src}" class="max-h-full max-w-full object-contain" alt="Drug image">
+                        </div>
+                    `).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- Therapeutic & Clinical Information -->
+            ${(data.indications || data.warnings || data.sideEffects || data.interactions || data.advice) ? `
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-notes-medical text-brand-500"></i> اطلاعات درمانی و بالینی
+                </h3>
+                <div class="space-y-3">
+                    ${data.indications ? `
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800">
+                        <div class="font-bold text-xs text-brand-600 dark:text-brand-400 mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-check"></i> موارد مصرف
+                        </div>
+                        <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">${data.indications}</p>
+                    </div>` : ''}
+
+                    ${data.warnings ? `
+                    <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/70 dark:border-amber-800/50">
+                        <div class="font-bold text-xs text-amber-600 dark:text-amber-400 mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i> هشدارها
+                        </div>
+                        <p class="text-xs text-amber-900 dark:text-amber-200/90 leading-relaxed">${data.warnings}</p>
+                    </div>` : ''}
+
+                    ${data.sideEffects ? `
+                    <div class="p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/70 dark:border-rose-800/50">
+                        <div class="font-bold text-xs text-rose-600 dark:text-rose-400 mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-heart-pulse"></i> عوارض جانبی
+                        </div>
+                        <p class="text-xs text-rose-900 dark:text-rose-200/90 leading-relaxed">${data.sideEffects}</p>
+                    </div>` : ''}
+
+                    ${data.interactions ? `
+                    <div class="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/70 dark:border-blue-800/50">
+                        <div class="font-bold text-xs text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-capsules"></i> تداخل‌های دارویی
+                        </div>
+                        <p class="text-xs text-blue-900 dark:text-blue-200/90 leading-relaxed">${data.interactions}</p>
+                    </div>` : ''}
+
+                    ${data.advice ? `
+                    <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800">
+                        <div class="font-bold text-xs text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-circle-info"></i> نکات قابل توصیه
+                        </div>
+                        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">${data.advice}</p>
+                    </div>` : ''}
+                </div>
+            </div>` : ''}
+
+            <!-- ATC Classification -->
+            ${data.atcTree.length > 0 ? `
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-sitemap text-brand-500"></i> طبقه‌بندی آناتومیک درمانی شیمیایی (کد ATC)
+                </h3>
+                <div class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-2">
+                    ${data.atcTree.map(item => `
+                        <div class="flex items-center justify-between text-xs py-1.5 border-b last:border-none border-slate-200/60 dark:border-slate-800">
+                            <span class="font-mono font-bold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950 px-2 py-0.5 rounded">${item.code}</span>
+                            <span class="text-slate-600 dark:text-slate-300 font-medium dir-ltr text-right">${item.desc}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>` : ''}
+
+            <!-- Similar / Alternative Products -->
+            ${data.similarProducts.length > 0 ? `
+            <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white mb-4 flex items-center justify-between">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-tablets text-brand-500"></i> محصولات مشابه و هم‌گروه</span>
+                    <span class="text-xs font-normal text-slate-400">(${toPersianDigits(data.similarProducts.length)} مورد)</span>
+                </h3>
+                <div class="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
+                    <table class="w-full text-right text-xs">
+                        <thead class="bg-slate-100 dark:bg-slate-900/80 text-slate-500">
+                            <tr>
+                                <th class="p-3">نام دارو</th>
+                                <th class="p-3 hidden sm:table-cell">صاحب نام تجاری</th>
+                                <th class="p-3">صاحب امتیاز</th>
+                                <th class="p-3 text-center">مشاهده</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                            ${data.similarProducts.map(p => `
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-colors">
+                                    <td class="p-3 font-bold text-slate-800 dark:text-slate-200">${p.name}</td>
+                                    <td class="p-3 text-slate-500 hidden sm:table-cell">${p.brandOwner || '—'}</td>
+                                    <td class="p-3 text-slate-500">${p.licensee || '—'}</td>
+                                    <td class="p-3 text-center">
+                                        ${p.detailHref ? `
+                                        <button class="open-similar-btn p-2 rounded-lg bg-brand-50 hover:bg-brand-100 dark:bg-brand-950 dark:hover:bg-brand-900 text-brand-600 dark:text-brand-400 transition-colors" data-url="${p.detailHref}" data-name="${p.name}">
+                                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                                        </button>` : '—'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>` : ''}
+        `;
+
+        // Bind image triggers in modal
+        this.content.querySelectorAll('.detail-img-trigger').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const idx = parseInt(btn.dataset.idx) || 0;
+                ImageModal.show(data.galleryImages, data.galleryImages, data.nameFa, idx);
+            });
+        });
+
+        // Bind similar product click to fetch in-place
+        this.content.querySelectorAll('.open-similar-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const nextUrl = btn.dataset.url;
+                const nextName = btn.dataset.name;
+                this.open(nextUrl, nextName);
+            });
         });
     }
 };
@@ -274,6 +647,7 @@ const SearchApp = {
         };
 
         ImageModal.init();
+        DrugDetailModal.init();
         this.loadHistory();
         this.bindEvents();
         
@@ -297,14 +671,14 @@ const SearchApp = {
 
         this.elements.input.addEventListener('input', () => this.handleInputState());
         
-        this.elements.clearBtn.addEventListener('click', () => {
+        this.elements.clearBtn?.addEventListener('click', () => {
             this.elements.input.value = '';
             this.elements.input.focus();
             this.handleInputState();
             this.resetView();
         });
 
-        this.elements.historyList.addEventListener('click', (e) => {
+        this.elements.historyList?.addEventListener('click', (e) => {
             const btn = e.target.closest('button');
             if (btn) {
                 const term = btn.dataset.term;
@@ -338,16 +712,16 @@ const SearchApp = {
 
     handleInputState() {
         const val = this.elements.input.value;
-        if (val.length > 0) this.elements.clearBtn.classList.remove('hidden');
-        else this.elements.clearBtn.classList.add('hidden');
+        if (val.length > 0) this.elements.clearBtn?.classList.remove('hidden');
+        else this.elements.clearBtn?.classList.add('hidden');
         
         const isRTL = /[\u0600-\u06FF]/.test(val);
         this.elements.input.dir = isRTL || !val ? 'rtl' : 'ltr';
     },
 
     resetView() {
-        this.elements.initialMsg.classList.remove('hidden');
-        this.elements.skeleton.classList.add('hidden');
+        this.elements.initialMsg?.classList.remove('hidden');
+        this.elements.skeleton?.classList.add('hidden');
         const containers = ['resultsControls', 'resultsGrid', 'resultsPagination'];
         containers.forEach(id => {
             const el = document.getElementById(id);
@@ -363,7 +737,7 @@ const SearchApp = {
         
         const grid = document.createElement('div');
         grid.id = 'resultsGrid';
-        grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in';
+        grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in';
         
         const pagination = document.createElement('div');
         pagination.id = 'resultsPagination';
@@ -374,10 +748,10 @@ const SearchApp = {
     },
 
     async performSearch(term, page = 1) {
-        this.elements.initialMsg.classList.add('hidden');
+        this.elements.initialMsg?.classList.add('hidden');
         this.resetView(); 
-        this.elements.skeleton.classList.remove('hidden');
-        this.elements.skeleton.classList.add('grid');
+        this.elements.skeleton?.classList.remove('hidden');
+        this.elements.skeleton?.classList.add('grid');
 
         const newUrl = `?Term=${encodeURIComponent(term)}&PageNumber=${page}`;
         window.history.pushState({ term, page }, '', newUrl);
@@ -392,32 +766,30 @@ const SearchApp = {
 
         } catch (error) {
             console.error(error);
-            this.elements.skeleton.classList.add('hidden');
+            this.elements.skeleton?.classList.add('hidden');
             
-            // SMART ERROR HANDLING LOGIC
             let errorTitle = 'خطا در برقراری ارتباط';
             let errorDesc = 'لطفاً اتصال اینترنت خود را بررسی کرده و دوباره تلاش کنید.';
             let errorIcon = 'fa-wifi';
-            let errorClass = 'text-red-600 bg-red-50/50 dark:bg-red-900/20 border-red-200';
+            let errorClass = 'text-rose-600 bg-rose-50/50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800';
 
-            // Check if user is Online but request failed (Indicates VPN/Geo-block)
             if (navigator.onLine) {
-                errorTitle = 'عدم دسترسی به سرور';
+                errorTitle = 'عدم دسترسی به سرور سامانه دارویی';
                 errorDesc = `
                     <div class="space-y-2">
-                        <p class="font-bold">این سامانه تنها با آی‌پی (IP) ایران در دسترس است.</p>
-                        <p>لطفاً اگر <span class="text-red-600 font-bold dark:text-red-400">فیلترشکن (VPN)</span> شما روشن است، آن را خاموش کرده و صفحه را رفرش کنید.</p>
+                        <p class="font-bold">این سامانه فقط از طریق آی‌پی‌های (IP) داخل ایران پاسخ می‌دهد.</p>
+                        <p>لطفاً اگر <span class="text-rose-600 font-bold dark:text-rose-400">فیلترشکن (VPN)</span> شما روشن است، آن را قطع کرده و مجدد جستجو کنید.</p>
                     </div>`;
-                errorIcon = 'fa-shield-alt';
-                errorClass = 'text-orange-700 bg-orange-50/80 dark:bg-orange-900/30 border-orange-200 dark:border-orange-800';
+                errorIcon = 'fa-shield-halved';
+                errorClass = 'text-amber-700 bg-amber-50/80 dark:bg-amber-900/30 border-amber-200 dark:border-amber-800';
             }
 
             this.elements.resultsArea.innerHTML += `
-                <div class="glass-panel ${errorClass} p-8 rounded-3xl text-center animate-fade-in mt-4 border">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/50 dark:bg-black/20 mb-4">
-                        <i class="fas ${errorIcon} text-4xl opacity-80"></i>
+                <div class="glass-card ${errorClass} p-8 rounded-3xl text-center mt-4 border">
+                    <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/50 dark:bg-black/20 mb-4">
+                        <i class="fa-solid ${errorIcon} text-2xl"></i>
                     </div>
-                    <h3 class="text-xl font-bold mb-3">${errorTitle}</h3>
+                    <h3 class="text-lg font-bold mb-2">${errorTitle}</h3>
                     <div class="text-sm opacity-90 leading-relaxed">${errorDesc}</div>
                 </div>`;
         }
@@ -428,8 +800,8 @@ const SearchApp = {
         const doc = parser.parseFromString(html, 'text/html');
         const rows = doc.querySelectorAll('.RowSearchSty');
         
-        this.elements.skeleton.classList.add('hidden');
-        this.elements.skeleton.classList.remove('grid');
+        this.elements.skeleton?.classList.add('hidden');
+        this.elements.skeleton?.classList.remove('grid');
 
         if (rows.length === 0) {
             this.renderEmptyState(doc);
@@ -474,27 +846,27 @@ const SearchApp = {
         const container = document.getElementById('resultsControls');
         
         container.innerHTML = `
-            <div class="glass-panel bg-white/50 dark:bg-gray-800/50 p-4 rounded-2xl mb-6 flex flex-col sm:flex-row gap-4 animate-fade-in">
+            <div class="glass-card p-3 sm:p-4 rounded-2xl mb-4 flex flex-col sm:flex-row gap-3">
                 <div class="flex-1">
-                    <label class="text-xs text-gray-500 mb-1 block px-1">مرتب‌سازی</label>
+                    <label class="text-[11px] font-bold text-slate-400 mb-1 block px-1">مرتب‌سازی نتایج</label>
                     <div class="relative">
-                        <select id="sortSelect" class="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-500 outline-none text-sm transition-shadow">
-                            <option value="none">پیش‌فرض</option>
-                            <option value="priceAsc">ارزان‌ترین</option>
-                            <option value="priceDesc">گران‌ترین</option>
-                            <option value="alpha">الفبا</option>
+                        <select id="sortSelect" class="w-full appearance-none bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-brand-500 outline-none text-xs transition-shadow">
+                            <option value="none">پیش‌فرض سامانه‌ای</option>
+                            <option value="priceAsc">ارزان‌ترین قیمت</option>
+                            <option value="priceDesc">گران‌ترین قیمت</option>
+                            <option value="alpha">حروف الفبا</option>
                         </select>
-                        <i class="fas fa-chevron-down absolute left-3 top-3 text-gray-400 text-xs pointer-events-none"></i>
+                        <i class="fa-solid fa-chevron-down absolute left-3 top-3 text-slate-400 text-xs pointer-events-none"></i>
                     </div>
                 </div>
                 <div class="flex-1">
-                    <label class="text-xs text-gray-500 mb-1 block px-1">فیلتر صاحب برند</label>
+                    <label class="text-[11px] font-bold text-slate-400 mb-1 block px-1">فیلتر برند دارویی</label>
                     <div class="relative">
-                        <select id="filterSelect" class="w-full appearance-none bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-500 outline-none text-sm transition-shadow">
-                            <option value="all">همه موارد</option>
+                        <select id="filterSelect" class="w-full appearance-none bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-brand-500 outline-none text-xs transition-shadow">
+                            <option value="all">تمام برندها</option>
                             ${owners.map(o => `<option value="${o}">${o}</option>`).join('')}
                         </select>
-                        <i class="fas fa-filter absolute left-3 top-3 text-gray-400 text-xs pointer-events-none"></i>
+                        <i class="fa-solid fa-filter absolute left-3 top-3 text-slate-400 text-xs pointer-events-none"></i>
                     </div>
                 </div>
             </div>
@@ -521,7 +893,7 @@ const SearchApp = {
         if (this.state.currentSort === 'alpha') displayData.sort((a, b) => a.titleFa.localeCompare(b.titleFa));
 
         if (displayData.length === 0) {
-            grid.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">موردی با این فیلتر یافت نشد.</div>';
+            grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400">موردی با این مشخصات یافت نشد.</div>';
         } else {
             const frag = document.createDocumentFragment();
             
@@ -530,60 +902,66 @@ const SearchApp = {
                 const hasImage = !!item.img;
                 
                 const card = document.createElement('div');
-                card.className = "glass-panel bg-white/60 dark:bg-gray-800/60 rounded-2xl p-5 hover:transform hover:-translate-y-1 transition-all duration-300 shadow-sm hover:shadow-xl dark:shadow-none relative group flex flex-col h-full";
-                card.innerHTML = `
-                    <div class="flex items-start justify-between mb-4">
-                        <span class="bg-blue-100 dark:bg-blue-900/50 text-primary-700 dark:text-blue-300 px-3 py-1 rounded-lg text-xs font-bold truncate max-w-[70%]">
-                            ${item.owner || 'برند نامشخص'}
-                        </span>
-                        ${item.productCode ? `
-                        <button class="copy-btn text-gray-400 hover:text-primary-500 transition-colors" data-copy="${item.productCode}" title="کپی کد فرآورده: ${item.productCode}">
-                            <i class="far fa-copy"></i>
-                        </button>` : ''}
-                    </div>
+                card.className = "glass-card rounded-2xl p-5 hover:border-brand-500/50 hover:shadow-card-hover transition-all duration-300 relative group flex flex-col justify-between cursor-pointer drug-card-trigger";
+                card.dataset.url = item.detailUrl;
+                card.dataset.title = item.titleFa;
 
-                    <div class="flex gap-4 mb-4">
-                        <div class="w-24 h-24 flex-shrink-0 bg-white dark:bg-gray-700 rounded-xl p-1 shadow-sm flex items-center justify-center cursor-pointer image-trigger" data-url="${item.detailUrl}" data-title="${item.titleFa}">
-                            ${hasImage 
-                                ? `<img src="${item.img}" class="w-full h-full object-contain hover:scale-105 transition-transform" loading="lazy" alt="${item.titleFa}">`
-                                : `<i class="fas fa-image text-3xl text-gray-300 dark:text-gray-600"></i>`
-                            }
+                card.innerHTML = `
+                    <div>
+                        <!-- Header Badges -->
+                        <div class="flex items-start justify-between gap-2 mb-3">
+                            <span class="bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 px-2.5 py-1 rounded-lg text-[11px] font-bold truncate max-w-[75%] border border-brand-200/50 dark:border-brand-800/50">
+                                ${item.owner || 'برند ثبت نشده'}
+                            </span>
+                            ${item.productCode ? `
+                            <button class="copy-btn text-slate-400 hover:text-brand-500 p-1 transition-colors" data-copy="${item.productCode}" title="کپی کد فرآورده: ${item.productCode}">
+                                <i class="fa-regular fa-copy"></i>
+                            </button>` : ''}
                         </div>
-                        
-                        <div class="flex-1 min-w-0 flex flex-col justify-center">
-                            <h3 class="font-bold text-gray-800 dark:text-white mb-1 line-clamp-2 leading-tight">${item.titleFa}</h3>
-                            <p class="text-xs text-gray-500 dark:text-gray-400 font-sans dir-ltr truncate mb-2">${item.titleEn}</p>
+
+                        <!-- Main Info & Image -->
+                        <div class="flex gap-4 mb-3">
+                            <div class="w-20 h-20 flex-shrink-0 bg-slate-100 dark:bg-slate-800/80 rounded-xl p-1.5 flex items-center justify-center overflow-hidden border border-slate-200/60 dark:border-slate-800">
+                                ${hasImage 
+                                    ? `<img src="${item.img}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300" loading="lazy" alt="${item.titleFa}">`
+                                    : `<i class="fa-solid fa-pills text-2xl text-slate-300 dark:text-slate-600"></i>`
+                                }
+                            </div>
                             
-                            <div class="space-y-1 border-r-2 border-gray-200 dark:border-gray-600 pr-2 mr-1">
-                                ${item.packaging ? `
-                                    <p class="text-xs text-gray-600 dark:text-gray-400 truncate" title="${item.packaging}">
-                                        <i class="fas fa-box-open ml-1 text-primary-500/70"></i>${item.packaging}
-                                    </p>` : ''}
-                                ${item.licenseHolder ? `
-                                    <p class="text-xs text-gray-600 dark:text-gray-400 truncate" title="${item.licenseHolder}">
-                                        <i class="fas fa-certificate ml-1 text-primary-500/70"></i>${item.licenseHolder}
-                                    </p>` : ''}
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-extrabold text-slate-900 dark:text-white text-base mb-1 line-clamp-2 leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                                    ${item.titleFa}
+                                </h3>
+                                <p class="text-[11px] text-slate-400 font-medium dir-ltr text-right truncate mb-2">${item.titleEn}</p>
+                                
+                                <div class="space-y-1">
+                                    ${item.packaging ? `
+                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate" title="${item.packaging}">
+                                            <i class="fa-solid fa-box-open ml-1 text-slate-400"></i>${item.packaging}
+                                        </p>` : ''}
+                                </div>
                             </div>
                         </div>
+
+                        ${item.genericCode ? `
+                        <div class="mb-3 text-[11px]">
+                             <span class="inline-flex items-center bg-slate-100 dark:bg-slate-800/60 px-2 py-0.5 rounded-md text-slate-600 dark:text-slate-400">
+                                <span class="opacity-60 ml-1">کد ژنریک:</span> ${toPersianDigits(item.genericCode)}
+                             </span>
+                        </div>` : ''}
                     </div>
 
-                    ${item.genericCode ? `
-                    <div class="mb-4 text-xs">
-                         <span class="inline-flex items-center bg-gray-100 dark:bg-gray-700/50 px-2 py-1 rounded text-gray-600 dark:text-gray-400">
-                            <span class="opacity-50 ml-1">کد ژنریک:</span> ${toPersianDigits(item.genericCode)}
-                         </span>
-                    </div>` : ''}
-
-                    <div class="mt-auto pt-4 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
-                        <div class="flex flex-col">
-                            <span class="text-xs text-gray-500">قیمت مصرف کننده</span>
-                            <span class="text-lg font-bold text-primary-600 dark:text-primary-400">
-                                ${priceFormatted} <span class="text-xs font-normal text-gray-500">ریال</span>
+                    <!-- Bottom Price & Modal Trigger -->
+                    <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block font-medium">قیمت مصوب</span>
+                            <span class="text-base font-extrabold text-slate-900 dark:text-emerald-400">
+                                ${priceFormatted} <span class="text-[10px] font-medium text-slate-400">ریال</span>
                             </span>
                         </div>
-                        <a href="${item.detailUrl}" target="_blank" class="w-10 h-10 rounded-xl bg-primary-50 dark:bg-gray-700 text-primary-600 dark:text-gray-200 flex items-center justify-center hover:bg-primary-600 hover:text-white transition-all shadow-sm hover:shadow-primary-500/30">
-                            <i class="fas fa-arrow-left"></i>
-                        </a>
+                        <button type="button" class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-brand-600 dark:bg-slate-800 dark:hover:bg-brand-600 text-slate-600 hover:text-white dark:text-slate-300 dark:hover:text-white flex items-center justify-center transition-all shadow-sm">
+                            <i class="fa-solid fa-arrow-left text-xs"></i>
+                        </button>
                     </div>
                 `;
                 frag.appendChild(card);
@@ -597,10 +975,10 @@ const SearchApp = {
         const container = document.getElementById('resultsPagination');
         
         const nav = document.createElement('nav');
-        nav.className = 'pagination-nav mt-10 flex justify-center';
+        nav.className = 'mt-10 flex justify-center';
         
         const ul = document.createElement('ul');
-        ul.className = 'flex flex-wrap gap-2 justify-center items-center p-2 bg-white/50 dark:bg-gray-800/50 rounded-2xl glass-panel';
+        ul.className = 'flex flex-wrap gap-1.5 justify-center items-center p-2 glass-card rounded-2xl';
 
         originalNav.querySelectorAll('li a').forEach(link => {
             const href = link.getAttribute('href');
@@ -612,20 +990,20 @@ const SearchApp = {
             const isActive = pageNum == currentPage;
 
             let content = text;
-            if (text === '>>') content = '<i class="fas fa-angle-double-right"></i>';
-            if (text === '<<') content = '<i class="fas fa-angle-double-left"></i>';
-            if (text === '>') content = '<i class="fas fa-angle-right"></i>';
-            if (text === '<') content = '<i class="fas fa-angle-left"></i>';
+            if (text === '>>') content = '<i class="fa-solid fa-angles-right text-xs"></i>';
+            if (text === '<<') content = '<i class="fa-solid fa-angles-left text-xs"></i>';
+            if (text === '>') content = '<i class="fa-solid fa-angle-right text-xs"></i>';
+            if (text === '<') content = '<i class="fa-solid fa-angle-left text-xs"></i>';
             
             if (/^\d+$/.test(content)) content = toPersianDigits(content);
 
             const li = document.createElement('li');
             const btn = document.createElement('button');
             
-            btn.className = `w-10 h-10 flex items-center justify-center rounded-xl text-sm transition-all ${
+            btn.className = `w-9 h-9 flex items-center justify-center rounded-xl text-xs font-semibold transition-all ${
                 isActive 
-                ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/40 font-bold scale-110' 
-                : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300'
+                ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30' 
+                : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'
             }`;
             btn.innerHTML = content;
             
@@ -649,19 +1027,19 @@ const SearchApp = {
         });
 
         const html = `
-            <div class="glass-panel flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl animate-fade-in">
-                <div class="bg-orange-100 dark:bg-orange-900/30 p-6 rounded-full mb-6">
-                    <i class="fas fa-search-minus text-4xl text-orange-500"></i>
+            <div class="glass-card flex flex-col items-center justify-center py-16 px-4 text-center rounded-3xl">
+                <div class="w-16 h-16 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center mb-4">
+                    <i class="fa-solid fa-magnifying-glass-chart text-2xl"></i>
                 </div>
-                <h3 class="text-xl font-bold mb-2">نتیجه‌ای یافت نشد</h3>
-                <p class="text-gray-500 dark:text-gray-400 mb-6 max-w-md">
-                    دارویی با این نام پیدا نشد. لطفا املا را بررسی کنید یا از کلمات کلیدی کوتاه‌تر استفاده کنید.
+                <h3 class="text-base font-bold text-slate-900 dark:text-white mb-2">دارویی با این عنوان یافت نشد</h3>
+                <p class="text-xs text-slate-400 mb-6 max-w-sm">
+                    لطفاً املا را بررسی نمایید یا عنوان فارسی یا انگلیسی دارو را به شکل مختصرتر وارد کنید.
                 </p>
                 ${suggestions.length ? `
-                    <div class="flex flex-wrap gap-2 justify-center">
-                        <span class="w-full text-sm text-gray-400 mb-2">پیشنهادات:</span>
+                    <div class="flex flex-wrap gap-2 justify-center max-w-md">
+                        <span class="w-full text-xs text-slate-400 mb-1">پیشنهادات سیستم:</span>
                         ${suggestions.map(s => `
-                            <button class="suggestion-btn px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-full text-sm hover:border-primary-500 hover:text-primary-500 transition-colors shadow-sm" data-term="${s.text}">
+                            <button class="suggestion-btn px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs hover:bg-brand-50 dark:hover:bg-brand-950/60 hover:text-brand-600 transition-colors" data-term="${s.text}">
                                 ${s.text}
                             </button>
                         `).join('')}
@@ -681,50 +1059,23 @@ const SearchApp = {
     },
 
     async handleResultClick(e) {
-        const imgTrigger = e.target.closest('.image-trigger');
-        if (imgTrigger) {
-            const detailUrl = imgTrigger.dataset.url;
-            const title = imgTrigger.dataset.title;
-            this.fetchAndShowGallery(detailUrl, title);
-            return;
-        }
-
+        // Copy Product Code click
         const copyBtn = e.target.closest('.copy-btn');
         if (copyBtn) {
             e.stopPropagation();
             const text = copyBtn.dataset.copy;
             copyTextToClipboard(text, copyBtn);
+            return;
         }
-    },
 
-    async fetchAndShowGallery(detailUrl, title) {
-        ImageModal.show([], [], title);
-        
-        try {
-            const res = await fetch(detailUrl);
-            const html = await res.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            const links = doc.querySelectorAll('a[data-lightbox="image-1"]');
-            let images = [];
-            
-            links.forEach(link => {
-                const href = link.getAttribute('href');
-                if (href) images.push(href.startsWith('http') ? href : this.baseUrl + href);
-            });
-            
-            images = [...new Set(images)];
-            
-            if (images.length > 0) {
-                ImageModal.show(images, images, title, 0);
-            } else {
-                ImageModal.loadImage(); 
+        // Open Complete Modal in our site instead of redirecting
+        const cardTrigger = e.target.closest('.drug-card-trigger');
+        if (cardTrigger) {
+            const detailUrl = cardTrigger.dataset.url;
+            const title = cardTrigger.dataset.title;
+            if (detailUrl) {
+                DrugDetailModal.open(detailUrl, title);
             }
-        } catch (e) {
-            console.error('Gallery Fetch Error', e);
-            ImageModal.caption.textContent = 'خطا در دریافت تصاویر';
-            ImageModal.spinner.style.display = 'none';
         }
     },
 
@@ -749,17 +1100,19 @@ const SearchApp = {
 
     renderHistory(items) {
         if (!items.length) {
-            this.elements.historyContainer.classList.add('hidden');
+            this.elements.historyContainer?.classList.add('hidden');
             return;
         }
-        this.elements.historyContainer.classList.remove('hidden');
-        this.elements.historyList.innerHTML = items.map(t => `
-            <li>
-                <button data-term="${t}" class="bg-white/70 dark:bg-gray-800/70 hover:bg-white dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded-lg text-xs border border-gray-200 dark:border-gray-700 transition-all hover:shadow-sm">
-                    ${t}
-                </button>
-            </li>
-        `).join('');
+        this.elements.historyContainer?.classList.remove('hidden');
+        if (this.elements.historyList) {
+            this.elements.historyList.innerHTML = items.map(t => `
+                <li>
+                    <button data-term="${t}" class="bg-slate-100 dark:bg-surface-cardDark hover:bg-brand-50 dark:hover:bg-brand-950/60 text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400 px-3 py-1 rounded-lg text-xs border border-slate-200/60 dark:border-slate-800 transition-all">
+                        ${t}
+                    </button>
+                </li>
+            `).join('');
+        }
     }
 };
 
@@ -777,11 +1130,7 @@ const ThemeManager = {
 
         this.btn.addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
-            if (document.documentElement.classList.contains('dark')) {
-                localStorage.theme = 'dark';
-            } else {
-                localStorage.theme = 'light';
-            }
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
         });
     }
 };
