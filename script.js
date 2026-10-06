@@ -249,7 +249,7 @@ const ImageModal = {
 
 // --- Search Application ---
 const SearchApp = {
-    baseUrl: 'https://irc.fda.gov.ir',
+    baseUrl: 'https://irc.ttac.ir',
     endpoints: { search: '/nfi/Search' },
     storageKeys: { history: 'drugHistory_v2', theme: 'drugTheme' },
     
