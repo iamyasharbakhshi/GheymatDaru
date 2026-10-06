@@ -378,5 +378,32 @@
             termInput.focus();
         });
     </script>
+
+    <!-- Full Drug Detail Modal -->
+    <div id="drugDetailModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="drugDetailTitle" role="dialog" aria-modal="true">
+        <!-- Backdrop -->
+        <div id="drugDetailBackdrop" class="fixed inset-0 bg-slate-950/70 backdrop-blur-md transition-opacity opacity-0"></div>
+    
+        <div class="min-h-screen px-4 text-center flex items-center justify-center p-0 sm:p-4">
+            <div id="drugDetailPanel" class="inline-block w-full max-w-4xl my-8 text-right align-middle transition-all transform bg-white dark:bg-surface-cardDark shadow-2xl rounded-3xl border border-slate-200 dark:border-slate-800 opacity-0 scale-95 overflow-hidden relative">
+                
+                <!-- Sticky Header -->
+                <div class="sticky top-0 z-20 flex items-center justify-between px-6 py-4 bg-white/90 dark:bg-surface-cardDark/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80">
+                    <div class="flex items-center gap-3">
+                        <span class="w-3 h-3 rounded-full bg-brand-500 animate-pulse"></span>
+                        <h2 id="drugDetailTitle" class="text-xl font-bold text-slate-900 dark:text-white truncate max-w-md">جزئیات دارو</h2>
+                    </div>
+                    <button id="closeDrugDetailModal" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white flex items-center justify-center transition-all">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+    
+                <!-- Content Container -->
+                <div id="drugDetailContent" class="p-6 max-h-[80vh] overflow-y-auto space-y-8">
+                    <!-- Dynamically populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
